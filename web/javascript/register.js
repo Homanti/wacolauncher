@@ -29,8 +29,32 @@ function validateForm() {
     validateForm();
 });
 
+async function register_account() {
+    try {
+        const result = await window.pywebview.api.account_register(nickname.value, password.value);
+
+        if (Array.isArray(result)) {
+            if (result[3]) {
+                open_tab("index.html");
+            } else {
+                open_tab("link_discord_register.html");
+            }
+        } else {
+            if (result === 401) {
+                showErrorModal("Неверный логин или пароль.");
+            } else {
+                showErrorModal("Произошла непредвиденная ошибка. Попробуйте еще раз.");
+            }
+        }
+    } catch (error) {
+        showErrorModal("Произошла ошибка при регистрации. Пожалуйста, попробуйте еще раз.");
+        console.error(error);
+    }
+}
+
+
 registerButton.addEventListener("click", function () {
-    window.pywebview.api.account_register(nickname.value, password.value);
+    register_account()
 })
 
 document.addEventListener('click', function (event) {

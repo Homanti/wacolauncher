@@ -78,9 +78,11 @@ class Api:
 
     def account_login(self, login, password):
         response = requests.post(
-            "https://wacodb-production.up.railway.app/",
+            "https://wacodb-production.up.railway.app/database/",
             json={"action": "login", "nickname": login, "password": password}
         )
+
+        print(response.json())
 
         if response.status_code == 200:
             save_account(response.json()["result"][1], response.json()["result"][2])
@@ -99,11 +101,13 @@ class Api:
 
     def account_register(self, login, password):
         response = requests.post(
-            "https://wacodb-production.up.railway.app/",
+            "https://wacodb-production.up.railway.app/database/",
             json={"action": "register", "nickname": login, "password": password}
         )
         if response.status_code == 200:
-            self.account_login(login, password)
+            a = self.account_login(login, password)
+            print(a)
+            return a
         else:
             print(f"Registration failed: {response.json()['detail']}")
             return 502
@@ -121,25 +125,21 @@ class Api:
     def get_accounts(self):
         return readJson("data/credentials.json")
 
-    def get_id(self):
+    def get_account_id(self):
         data = readJson("data/credentials.json")
         if data:
             for item in data:
                 if item['active']:
                     return self.account_login(item['nickname'], item['password'])
 
-
-if __name__ == '__main__':
-    api = Api()
-    window = webview.create_window(title="WacoLauncher", url="web/login.html", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-
-    def check_login():
+    def check_login(self):
         data = readJson("data/credentials.json")
         if data:
             for item in data:
                 if item['active']:
-                    api.account_login(item['nickname'], item['password'])
-                    break
+                    return self.account_login(item['nickname'], item['password'])
 
-
-    webview.start(check_login, debug=True)
+if __name__ == '__main__':
+    api = Api()
+    window = webview.create_window(title="WacoLauncher", url="web/login.html", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
+    webview.start(debug=True)

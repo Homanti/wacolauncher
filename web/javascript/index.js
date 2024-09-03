@@ -6,8 +6,19 @@ function toggleDropdown() {
 }
 
 // Функция для переключения аккаунтов
-function switchAccount(name, password, avatar) {
-    window.pywebview.api.account_login(name, password);
+async function switchAccount(name, password, avatar) {
+    const result = await window.pywebview.api.account_login(name, password);
+
+    console.log(result)
+
+    if (!Array.isArray(result)) {
+        if (result === 401) {
+            open_tab("login.html")
+            showErrorModal("Неверный логин или пароль.");
+        } else {
+            showErrorModal("Произошла непредвиденная ошибка. Попробуйте еще раз.");
+        }
+    }
     document.getElementById("currentProfileName").textContent = name; // Изменяем имя профиля
     document.getElementById("currentAvatar").src = avatar; // Изменяем аватар
     toggleDropdown(); // Закрываем дропдаун после выбора

@@ -1,14 +1,27 @@
 window.addEventListener('pywebviewready', function() {
-    get_id();
+    get_account_id();
 });
 
 async function check_discord_link() {
-    window.pywebview.api.check_discord_link();
+    const result = await window.pywebview.api.check_discord_link();
+
+    if (Array.isArray(result)) {
+        if (result[3]) {
+            open_tab("index.html")
+        }
+    } else {
+        if (result === 401) {
+            open_tab("login.html")
+            showErrorModal("Неверный логин или пароль.");
+        } else {
+            showErrorModal("Произошла непредвиденная ошибка. Попробуйте еще раз.");
+        }
+    }
 }
 
-async function get_id() {
+async function get_account_id() {
     try {
-        const idList = await window.pywebview.api.get_id(); // Получаем список ID
+        const idList = await window.pywebview.api.get_account_id(); // Получаем список ID
         if (idList && idList.length > 0) {
             const firstId = idList[0]; // Берем первый элемент списка
             const discordLinkElement = document.getElementById("discord_link");
