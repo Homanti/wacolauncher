@@ -20,6 +20,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
 async function login_account() {
     const result = await window.pywebview.api.account_login(nickname.value, password.value);
+
     if (Array.isArray(result)) {
         if (result[3]) {
             open_tab("index.html")
