@@ -82,8 +82,6 @@ class Api:
             json={"action": "login", "nickname": login, "password": password}
         )
 
-        print(response.json())
-
         if response.status_code == 200:
             save_account(response.json()["result"][1], response.json()["result"][2])
             return response.json()["result"]
