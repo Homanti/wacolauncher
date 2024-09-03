@@ -76,41 +76,37 @@ class Api:
     def load_tab(self, html_name):
         window.load_url(f'file://{os.path.abspath("web/" + html_name)}')
 
-    def account_login(self, login, password, dont_load_tab = False):
+    def account_login(self, login, password):
         response = requests.post(
-            "http://127.0.0.1:8000/database/",
+            "https://wacodb-production.up.railway.app/",
             json={"action": "login", "nickname": login, "password": password}
         )
 
         if response.status_code == 200:
             save_account(response.json()["result"][1], response.json()["result"][2])
-            if response.json()["result"][3]:
-                if not dont_load_tab:
-                    self.load_tab('index.html')
-                else:
-                    return response.json()["result"]
-            else:
-                if not dont_load_tab:
-                    self.load_tab('link_discord_register.html')
-                else:
-                    return response.json()["result"]
-        else:
+            return response.json()["result"]
+
+        elif response.status_code == 401:
             data = readJson("data/credentials.json")
             if data:
                 data = [item for item in data if not (item['nickname'] == login and item['password'] == password)]
                 writeJson("data/credentials.json", data)
 
             print(f"Login failed: {response.json()['detail']}")
+            return 401
+        else:
+            return 502
 
     def account_register(self, login, password):
         response = requests.post(
-            "http://127.0.0.1:8000/database/",
+            "https://wacodb-production.up.railway.app/",
             json={"action": "register", "nickname": login, "password": password}
         )
         if response.status_code == 200:
             self.account_login(login, password)
         else:
             print(f"Registration failed: {response.json()['detail']}")
+            return 502
 
     def check_discord_link(self):
         data = readJson("data/credentials.json")
@@ -130,7 +126,7 @@ class Api:
         if data:
             for item in data:
                 if item['active']:
-                    return self.account_login(item['nickname'], item['password'], dont_load_tab=True)
+                    return self.account_login(item['nickname'], item['password'])
 
 
 if __name__ == '__main__':
