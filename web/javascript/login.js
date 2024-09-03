@@ -18,6 +18,21 @@ document.addEventListener('DOMContentLoaded', function () {
     validateForm();
 });
 
+window.addEventListener('pywebviewready', async function() {
+    const accounts = await get_accounts();
+    console.log(accounts);
+    if (typeof accounts === 'object' && accounts !== null) {
+        document.getElementById("header").style.display = 'block';
+    } else {
+        document.getElementById("header").style.display = 'none';
+    }
+});
+
+
+async function get_accounts() {
+    return await window.pywebview.api.get_accounts();
+}
+
 async function login_account() {
     const result = await window.pywebview.api.account_login(nickname.value, password.value);
 

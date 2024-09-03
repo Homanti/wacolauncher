@@ -71,7 +71,6 @@ def save_account(login, password):
     except Exception as e:
         print(f"Ошибка при обработке файла data/credentials.json: {e}, информация которая записывалась в файл {new_account_data}")
 
-
 class Api:
     def load_tab(self, html_name):
         window.load_url(f'file://{os.path.abspath("web/" + html_name)}')
@@ -103,9 +102,7 @@ class Api:
             json={"action": "register", "nickname": login, "password": password}
         )
         if response.status_code == 200:
-            a = self.account_login(login, password)
-            print(a)
-            return a
+            return self.account_login(login, password)
         else:
             print(f"Registration failed: {response.json()['detail']}")
             return 502
@@ -135,9 +132,14 @@ class Api:
         if data:
             for item in data:
                 if item['active']:
-                    return self.account_login(item['nickname'], item['password'])
+                    result = self.account_login(item['nickname'], item['password'])
+                    if isinstance(result, list):
+                        if result[3]:
+                            self.load_tab("index.html")
+                        else:
+                            self.load_tab("link_discord_register.html")
 
 if __name__ == '__main__':
     api = Api()
     window = webview.create_window(title="WacoLauncher", url="web/login.html", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(debug=True)
+    webview.start(api.check_login,debug=True)

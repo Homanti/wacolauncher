@@ -9,12 +9,12 @@ function toggleDropdown() {
 async function switchAccount(name, password, avatar) {
     const result = await window.pywebview.api.account_login(name, password);
 
-    console.log(result)
-
     if (!Array.isArray(result)) {
         if (result === 401) {
-            open_tab("login.html")
             showErrorModal("Неверный логин или пароль.");
+            if (!get_accounts()) {
+                open_tab("login.html")
+            }
         } else {
             showErrorModal("Произошла непредвиденная ошибка. Попробуйте еще раз.");
         }
@@ -29,7 +29,7 @@ window.addEventListener('pywebviewready', function() {
 });
 
 async function get_accounts() {
-    const accounts = await pywebview.api.get_accounts();
+    const accounts = await window.pywebview.api.get_accounts();
     updateDropdown(accounts);
 }
 
