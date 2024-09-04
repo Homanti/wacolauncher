@@ -3,7 +3,6 @@ import base64
 import json
 import webbrowser
 import io
-
 import aiohttp
 import webview
 import os
