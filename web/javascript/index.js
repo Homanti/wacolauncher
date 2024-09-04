@@ -11,12 +11,12 @@ async function switchAccount(name, password, avatar) {
 
     if (!Array.isArray(result)) {
         if (result === 401) {
-            showErrorModal("Неверный логин или пароль.");
+            show_info_modal("Ошибка", "Неверный логин или пароль.");
             if (!get_accounts()) {
                 open_tab("login.html")
             }
         } else {
-            showErrorModal("Произошла непредвиденная ошибка. Попробуйте еще раз.");
+            show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
         }
     }
     document.getElementById("currentProfileName").textContent = name; // Изменяем имя профиля

@@ -51,9 +51,9 @@ async function register_account() {
                 }
             } else {
                 if (result === 401) {
-                    showErrorModal("Неверный логин или пароль.");
+                    show_info_modal("Ошибка", "Неверный логин или пароль.");
                 } else {
-                    showErrorModal("Произошла непредвиденная ошибка. Попробуйте еще раз.");
+                    show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
                 }
             }
         };
@@ -61,7 +61,7 @@ async function register_account() {
         fileReader.readAsArrayBuffer(file);
 
     } catch (error) {
-        showErrorModal("Произошла ошибка при регистрации. Пожалуйста, попробуйте еще раз.");
+        show_info_modal("Ошибка", "Произошла ошибка при регистрации. Пожалуйста, попробуйте еще раз.");
         console.error(error);
     }
 }

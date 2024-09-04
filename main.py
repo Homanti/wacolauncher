@@ -1,7 +1,10 @@
+import asyncio
 import base64
 import json
 import webbrowser
 import io
+
+import aiohttp
 import webview
 import os
 import requests
@@ -108,7 +111,7 @@ class Api:
         else:
             return 502
 
-    def upload_skin(self, nickname, password, skin_bytes):
+    async def upload_skin(self, nickname, password, skin_bytes):
         result = self.account_login(nickname, password)
 
         if isinstance(result, list):
@@ -119,52 +122,56 @@ class Api:
             head = image.crop(head_box)
             head = head.resize((40, 40), Image.Resampling.LANCZOS)
 
-            for file_suffix, img in zip(["skin", "head"], [image, head]):
-                image_file = io.BytesIO()
-                img.save(image_file, format='PNG')
-                image_file.seek(0)
+            async with aiohttp.ClientSession() as session:
+                for file_suffix, img in zip(["skin", "head"], [image, head]):
+                    image_file = io.BytesIO()
+                    img.save(image_file, format='PNG')
+                    image_file.seek(0)
 
-                encoded_image = base64.b64encode(image_file.getvalue()).decode('utf-8')
+                    encoded_image = base64.b64encode(image_file.getvalue()).decode('utf-8')
 
-                headers = {
-                    'Authorization': f'token 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',
-                    'Accept': 'application/vnd.github.v3+json',
-                }
+                    headers = {
+                        'Authorization': f'token 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',
+                        'Accept': 'application/vnd.github.v3+json',
+                    }
 
-                upload_url = f'https://api.github.com/repos/Homanti/wacoskins/contents/{nickname}_{file_suffix}.png'
-                response_check = requests.get(upload_url, headers=headers)
+                    upload_url = f'https://api.github.com/repos/Homanti/wacoskins/contents/{nickname}_{file_suffix}.png'
 
-                if response_check.status_code == 200:
-                    file_info = response_check.json()
-                    sha = file_info['sha']
+                    # Получаем существующий файл
+                    async with session.get(upload_url, headers=headers) as response_check:
+                        if response_check.status == 200:
+                            file_info = await response_check.json()
+                            sha = file_info['sha']
 
-                    # Удаляем существующий файл
-                    delete_data = {
-                        'message': f'Delete existing {file_suffix} image',
-                        'sha': sha,
+                            # Если файл существует, удаляем его
+                            delete_data = {
+                                'message': f'Delete existing {file_suffix} image',
+                                'sha': sha,
+                                'branch': 'main'
+                            }
+                            async with session.delete(upload_url, headers=headers, json=delete_data) as response_delete:
+                                if response_delete.status in (200, 204):
+                                    print(f"Existing {file_suffix} image deleted successfully.")
+                                else:
+                                    print(f"Failed to delete existing {file_suffix} image: {response_delete.status} - {await response_delete.json()}")
+
+                    # Загрузка нового изображения
+                    data = {
+                        'message': f'Upload {file_suffix} image',
+                        'content': encoded_image,
                         'branch': 'main'
                     }
-                    response_delete = requests.delete(upload_url, headers=headers, json=delete_data)
 
-                    if response_delete.status_code in (200, 204):
-                        print(f"Existing {file_suffix} image deleted successfully.")
-                    else:
-                        print(f"Failed to delete existing {file_suffix} image: {response_delete.status_code} - {response_delete.json().get('message', 'Unknown error')}")
+                    async with session.put(upload_url, headers=headers, json=data) as response_upload:
+                        if response_upload.status in (201, 200):
+                            print(f"{file_suffix.capitalize()} image uploaded successfully.")
+                        else:
+                            print(f"Image upload failed: {response_upload.status} - {await response_upload.json()}")
 
-                data = {
-                    'message': f'Upload {file_suffix} image',
-                    'content': encoded_image,
-                    'branch': 'main'
-                }
-
-                response_upload = requests.put(upload_url, headers=headers, json=data)
-
-                if response_upload.status_code in (201, 200):
-                    print(f"{file_suffix.capitalize()} image uploaded successfully.")
-                else:
-                    print(f"Image upload failed: {response_upload.status_code} - {response_upload.json().get('message', 'Unknown error')}")
-                    return False
         return True
+
+    def start_upload_skin(self, nickname, password, skin_bytes):
+        return asyncio.run(self.upload_skin(nickname, password, skin_bytes))
 
     def account_register(self, nickname, password, rp_history, how_did_you_find, skin_bytes):
         response = requests.post("https://wacodb-production.up.railway.app/database/", json={
@@ -176,7 +183,7 @@ class Api:
         })
 
         if response.status_code == 200:
-            self.upload_skin(nickname, password, skin_bytes)
+            self.start_upload_skin(nickname, password, skin_bytes)
             return self.account_login(nickname, password)
         else:
             print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")

@@ -12,9 +12,9 @@ async function check_discord_link() {
     } else {
         if (result === 401) {
             open_tab("login.html")
-            showErrorModal("Неверный логин или пароль.");
+            show_info_modal("Ошибка", "Неверный логин или пароль.");
         } else {
-            showErrorModal("Произошла непредвиденная ошибка. Попробуйте еще раз.");
+            show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
         }
     }
 }
