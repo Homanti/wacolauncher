@@ -81,7 +81,7 @@ class Api:
 
     def account_login(self, nickname, password):
         response = requests.post(
-            "https://wacodb-production.up.railway.app//database/",
+            "https://wacodb-production.up.railway.app/database/",
             json={"action": "login", "nickname": nickname, "password": password}
         )
 
@@ -101,7 +101,9 @@ class Api:
             return 502
 
     def account_register(self, nickname, password, rp_history, how_did_you_find, skin_bytes):
-        response = requests.post("https://wacodb-production.up.railway.app//database/", json={
+        skin_bytes = bytes(skin_bytes)
+
+        response = requests.post("https://wacodb-production.up.railway.app/database/", json={
             "action": "register",
             "nickname": nickname,
             "password": password,
@@ -128,12 +130,13 @@ class Api:
                 'branch': 'main'
             }
 
-            response_upload = requests.put(f'https://api.github.com/repos/Homanti/wacoskins/{nickname}.png', headers=headers, json=data)
+            upload_url = f'https://api.github.com/repos/Homanti/wacoskins/contents/{nickname}.png'
+            response_upload = requests.put(upload_url, headers=headers, json=data)
 
             if response_upload.status_code in (201, 200):
                 print("Image uploaded successfully.")
             else:
-                print(f"Image upload failed: {response_upload.json().get('message', 'Unknown error')}")
+                print(f"Image upload failed: {response_upload.status_code} - {response_upload.json().get('message', 'Unknown error')}")
 
             return self.account_login(nickname, password)
         else:
