@@ -96,28 +96,31 @@ class Api:
         else:
             return 502
 
-    def account_register(self, nickname, password, rp_history, how_did_you_find, skin_direction):
+    def account_register(self, nickname, password, rp_history, how_did_you_find, skin):
         response = requests.post(
             "https://wacodb-production.up.railway.app/database/",
             json={"action": "register", "nickname": nickname, "password": password, "rp_history": rp_history, "how_did_you_find": how_did_you_find}
         )
 
         if response.status_code == 200:
-            with open(skin_direction, 'rb') as file:
-                response = requests.post(
-                    "https://wacodb-production.up.railway.app/upload_skin/",
-                    data={"action": "upload_skin", "nickname": nickname, "password": password},
-                    files={"skin_png": file}
-                )
+            response = requests.post(
+                "https://wacodb-production.up.railway.app/upload_skin/",
+                data={"action": "upload_skin", "nickname": nickname, "password": password},
+                files={"skin_png": skin}
+            )
 
             if response.status_code == 200:
                 return self.account_login(nickname, password)
             else:
-                print(f"Registration failed: {response.json()['detail']}")
+                response = requests.post(
+                    "https://wacodb-production.up.railway.app/database/",
+                    json={"action": "delete", "nickname": nickname, "password": password}
+                )
+                print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
                 return 502
 
         else:
-            print(f"Registration failed: {response.json()['detail']}")
+            print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
             return 502
 
     def check_discord_link(self):

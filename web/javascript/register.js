@@ -7,15 +7,14 @@ const rulesCheckbox = document.getElementById('checkbox_register_rules');
 const registerButton = document.getElementById('btn_register');
 
 document.addEventListener('DOMContentLoaded', function () {
-function validateForm() {
-    const fields = [nickname, password, history, how_did_you_find];
-    const isFormValid = fields.every(field => field.value.trim() !== '') &&
-                        skin.files.length > 0 &&
-                        rulesCheckbox.checked;
+    function validateForm() {
+        const fields = [nickname, password, history, how_did_you_find];
+        const isFormValid = fields.every(field => field.value.trim() !== '') &&
+                            skin.files.length > 0 &&
+                            rulesCheckbox.checked;
 
-    registerButton.disabled = !isFormValid;
+        registerButton.disabled = !isFormValid;
     }
-
 
     // Привязываем событие 'input' ко всем полям для проверки формы в реальном времени
     nickname.addEventListener('input', validateForm);
@@ -31,7 +30,14 @@ function validateForm() {
 
 async function register_account() {
     try {
-        const result = await window.pywebview.api.account_register(nickname.value, password.value, history.value, how_did_you_find.value, skin.value);
+        const formData = new FormData();
+        formData.append('nickname', nickname.value);
+        formData.append('password', password.value);
+        formData.append('history', history.value);
+        formData.append('how_did_you_find', how_did_you_find.value);
+        formData.append('skin', skin.files[0]);  // Отправляем файл
+
+        const result = await window.pywebview.api.account_register(formData);
 
         if (Array.isArray(result)) {
             if (result[3]) {
@@ -52,10 +58,9 @@ async function register_account() {
     }
 }
 
-
 registerButton.addEventListener("click", function () {
-    register_account()
-})
+    register_account();
+});
 
 document.addEventListener('click', function (event) {
     if (event.target.tagName === 'A' && event.target.href) {

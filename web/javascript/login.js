@@ -20,8 +20,8 @@ document.addEventListener('DOMContentLoaded', function () {
 
 window.addEventListener('pywebviewready', async function() {
     const accounts = await get_accounts();
-    console.log(accounts);
-    if (typeof accounts === 'object' && accounts !== null) {
+
+    if (accounts.length > 0) {
         document.getElementById("header").style.display = 'block';
     } else {
         document.getElementById("header").style.display = 'none';
