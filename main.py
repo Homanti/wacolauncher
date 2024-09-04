@@ -7,6 +7,12 @@ import os
 import requests
 from PIL import Image
 
+def createFolderIfNeeded(folder_name):
+    if not os.path.exists(folder_name):
+        os.makedirs(folder_name, exist_ok=True)
+        print(f"Папка {folder_name} создана")
+
+createFolderIfNeeded("data")
 
 def readJson(filename):  # чтение json файлов
     if filename.startswith('http://'):
@@ -124,13 +130,35 @@ class Api:
                 'Accept': 'application/vnd.github.v3+json',
             }
 
+            # Проверяем, существует ли файл
+            upload_url = f'https://api.github.com/repos/Homanti/wacoskins/contents/{nickname}.png'
+            response_check = requests.get(upload_url, headers=headers)
+
+            if response_check.status_code == 200:
+                # Файл существует, получаем информацию о нём для удаления
+                file_info = response_check.json()
+                sha = file_info['sha']
+
+                # Удаляем существующий файл
+                delete_data = {
+                    'message': 'Delete existing skin image',
+                    'sha': sha,
+                    'branch': 'main'
+                }
+                response_delete = requests.delete(upload_url, headers=headers, json=delete_data)
+
+                if response_delete.status_code in (200, 204):
+                    print("Existing image deleted successfully.")
+                else:
+                    print(f"Failed to delete existing image: {response_delete.status_code} - {response_delete.json().get('message', 'Unknown error')}")
+
+            # Теперь загружаем новое изображение
             data = {
                 'message': 'Upload skin image',
                 'content': encoded_image,
                 'branch': 'main'
             }
 
-            upload_url = f'https://api.github.com/repos/Homanti/wacoskins/contents/{nickname}.png'
             response_upload = requests.put(upload_url, headers=headers, json=data)
 
             if response_upload.status_code in (201, 200):
@@ -178,4 +206,4 @@ class Api:
 if __name__ == '__main__':
     api = Api()
     window = webview.create_window(title="WacoLauncher", url="web/login.html", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(api.check_login,debug=True)
+    webview.start(api.check_login, debug=False)
