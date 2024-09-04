@@ -107,7 +107,7 @@ class Api:
                 response = requests.post(
                     "https://wacodb-production.up.railway.app/upload_skin/",
                     data={"action": "upload_skin", "nickname": nickname, "password": password},
-                    files={"file": file}
+                    files={"skin_png": file}
                 )
 
             if response.status_code == 200:
