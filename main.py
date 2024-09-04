@@ -7,6 +7,7 @@ import os
 import requests
 from PIL import Image
 
+
 def createFolderIfNeeded(folder_name):
     if not os.path.exists(folder_name):
         os.makedirs(folder_name, exist_ok=True)
@@ -42,9 +43,9 @@ def writeJson(filename, data):
     except Exception as e:
         print(f"Ошибка при обработке файла {filename}: {e}, информация которая записывалась в файл {data}")
 
-def save_account(login, password):
+def save_account(nickname, password):
     new_account_data = {
-        "nickname": login,
+        "nickname": nickname,
         "password": password,
         "active": True,
     }
@@ -60,12 +61,12 @@ def save_account(login, password):
         else:
             updated = False
             for account in data:
-                if account["nickname"] == login:
+                if account["nickname"] == nickname:
                     if account["password"] != password:
                         account["password"] = password
-                        print(f"Пароль для аккаунта с ником {login} был обновлен.")
+                        print(f"Пароль для аккаунта с ником {nickname} был обновлен.")
                     else:
-                        print(f"Аккаунт с ником {login} уже существует с таким же паролем.")
+                        print(f"Аккаунт с ником {nickname} уже существует с таким же паролем.")
                     account["active"] = True
                     updated = True
                 else:
@@ -80,6 +81,7 @@ def save_account(login, password):
         writeJson("data/credentials.json", data)
     except Exception as e:
         print(f"Ошибка при обработке файла data/credentials.json: {e}, информация которая записывалась в файл {new_account_data}")
+
 
 class Api:
     def load_tab(self, html_name):
@@ -106,35 +108,22 @@ class Api:
         else:
             return 502
 
-    def account_register(self, nickname, password, rp_history, how_did_you_find, skin_bytes):
-        skin_bytes = bytes(skin_bytes)
+    def upload_skin(self, nickname, password, skin_bytes):
+        result = self.account_login(nickname, password)
 
-        # Отправляем данные для регистрации
-        response = requests.post("https://wacodb-production.up.railway.app/database/", json={
-            "action": "register",
-            "nickname": nickname,
-            "password": password,
-            "rp_history": rp_history,
-            "how_did_you_find": how_did_you_find
-        })
-
-        if response.status_code == 200:
-            # Открываем изображение скина
+        if isinstance(result, list):
+            skin_bytes = bytes(skin_bytes)
             image = Image.open(io.BytesIO(skin_bytes))
 
-            # Вырезаем голову (координаты для Minecraft-скина)
             head_box = (8, 8, 16, 16)
             head = image.crop(head_box)
             head = head.resize((40, 40), Image.Resampling.LANCZOS)
 
-            # Сохраняем и полный скин, и голову
             for file_suffix, img in zip(["skin", "head"], [image, head]):
-                # Сохраняем изображение в буфер
                 image_file = io.BytesIO()
                 img.save(image_file, format='PNG')
                 image_file.seek(0)
 
-                # Кодируем изображение в base64
                 encoded_image = base64.b64encode(image_file.getvalue()).decode('utf-8')
 
                 headers = {
@@ -142,12 +131,10 @@ class Api:
                     'Accept': 'application/vnd.github.v3+json',
                 }
 
-                # Проверяем, существует ли файл
                 upload_url = f'https://api.github.com/repos/Homanti/wacoskins/contents/{nickname}_{file_suffix}.png'
                 response_check = requests.get(upload_url, headers=headers)
 
                 if response_check.status_code == 200:
-                    # Файл существует, получаем информацию о нём для удаления
                     file_info = response_check.json()
                     sha = file_info['sha']
 
@@ -164,7 +151,6 @@ class Api:
                     else:
                         print(f"Failed to delete existing {file_suffix} image: {response_delete.status_code} - {response_delete.json().get('message', 'Unknown error')}")
 
-                # Теперь загружаем новое изображение
                 data = {
                     'message': f'Upload {file_suffix} image',
                     'content': encoded_image,
@@ -177,7 +163,20 @@ class Api:
                     print(f"{file_suffix.capitalize()} image uploaded successfully.")
                 else:
                     print(f"Image upload failed: {response_upload.status_code} - {response_upload.json().get('message', 'Unknown error')}")
+                    return False
+        return True
 
+    def account_register(self, nickname, password, rp_history, how_did_you_find, skin_bytes):
+        response = requests.post("https://wacodb-production.up.railway.app/database/", json={
+            "action": "register",
+            "nickname": nickname,
+            "password": password,
+            "rp_history": rp_history,
+            "how_did_you_find": how_did_you_find
+        })
+
+        if response.status_code == 200:
+            self.upload_skin(nickname, password, skin_bytes)
             return self.account_login(nickname, password)
         else:
             print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
@@ -215,7 +214,29 @@ class Api:
                         else:
                             self.load_tab("link_discord_register.html")
 
+    def update_password(self, nickname, password, new_password):
+        response = requests.post(
+            "https://wacodb-production.up.railway.app/database/",
+            json={"action": "update_password", "nickname": nickname, "password": password, "new_password": new_password}
+        )
+
+        if response.status_code == 200:
+            save_account(nickname, new_password)
+            return 200
+
+        elif response.status_code == 401:
+            data = readJson("data/credentials.json")
+            if data:
+                data = [item for item in data if not (item['nickname'] == nickname and item['password'] == password)]
+                writeJson("data/credentials.json", data)
+
+            print(f"Login failed: {response.json()['detail']}")
+            return 401
+        else:
+            return 502
+
+
 if __name__ == '__main__':
     api = Api()
     window = webview.create_window(title="WacoLauncher", url="web/login.html", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(api.check_login, debug=False)
+    webview.start(api.check_login, debug=True)
