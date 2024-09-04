@@ -30,28 +30,36 @@ document.addEventListener('DOMContentLoaded', function () {
 
 async function register_account() {
     try {
-        const formData = new FormData();
-        formData.append('nickname', nickname.value);
-        formData.append('password', password.value);
-        formData.append('history', history.value);
-        formData.append('how_did_you_find', how_did_you_find.value);
-        formData.append('skin', skin.files[0]);  // Отправляем файл
+        const file = skin.files[0];
+        const fileReader = new FileReader();
 
-        const result = await window.pywebview.api.account_register(formData);
+        fileReader.onload = async function(event) {
+            const fileBytes = new Uint8Array(event.target.result);
+            const result = await window.pywebview.api.account_register(
+                nickname.value,
+                password.value,
+                history.value,
+                how_did_you_find.value,
+                Array.from(fileBytes)
+            );
 
-        if (Array.isArray(result)) {
-            if (result[3]) {
-                open_tab("index.html");
+            if (Array.isArray(result)) {
+                if (result[3]) {
+                    open_tab("index.html");
+                } else {
+                    open_tab("link_discord_register.html");
+                }
             } else {
-                open_tab("link_discord_register.html");
+                if (result === 401) {
+                    showErrorModal("Неверный логин или пароль.");
+                } else {
+                    showErrorModal("Произошла непредвиденная ошибка. Попробуйте еще раз.");
+                }
             }
-        } else {
-            if (result === 401) {
-                showErrorModal("Неверный логин или пароль.");
-            } else {
-                showErrorModal("Произошла непредвиденная ошибка. Попробуйте еще раз.");
-            }
-        }
+        };
+
+        fileReader.readAsArrayBuffer(file);
+
     } catch (error) {
         showErrorModal("Произошла ошибка при регистрации. Пожалуйста, попробуйте еще раз.");
         console.error(error);

@@ -1,5 +1,7 @@
 import json
 import webbrowser
+from io import BytesIO
+
 import webview
 import os
 import requests
@@ -96,27 +98,40 @@ class Api:
         else:
             return 502
 
-    def account_register(self, nickname, password, rp_history, how_did_you_find, skin):
+    def account_register(self, nickname, password, rp_history, how_did_you_find, skin_bytes):
+        # Выполняем регистрацию пользователя
         response = requests.post(
             "https://wacodb-production.up.railway.app/database/",
-            json={"action": "register", "nickname": nickname, "password": password, "rp_history": rp_history, "how_did_you_find": how_did_you_find}
+            json={
+                "action": "register",
+                "nickname": nickname,
+                "password": password,
+                "rp_history": rp_history,
+                "how_did_you_find": how_did_you_find
+            }
         )
 
         if response.status_code == 200:
-            response = requests.post(
-                "https://wacodb-production.up.railway.app/upload_skin/",
-                data={"action": "upload_skin", "nickname": nickname, "password": password},
-                files={"skin_png": skin}
-            )
-
-            if response.status_code == 200:
-                return self.account_login(nickname, password)
-            else:
+            try:
+                skin_file = BytesIO(bytes(skin_bytes))
                 response = requests.post(
-                    "https://wacodb-production.up.railway.app/database/",
-                    json={"action": "delete", "nickname": nickname, "password": password}
+                    "https://wacodb-production.up.railway.app/upload_skin/",
+                    data={"action": "upload_skin", "nickname": nickname, "password": password},
+                    files={"skin_png": skin_file}
                 )
-                print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
+
+                if response.status_code == 200:
+                    return self.account_login(nickname, password)
+                else:
+                    response = requests.post(
+                        "https://wacodb-production.up.railway.app/database/",
+                        json={"action": "delete", "nickname": nickname, "password": password}
+                    )
+                    print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
+                    return 502
+
+            except Exception as e:
+                print(f"File upload failed: {str(e)}")
                 return 502
 
         else:
