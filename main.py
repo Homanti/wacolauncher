@@ -109,6 +109,7 @@ class Api:
     def account_register(self, nickname, password, rp_history, how_did_you_find, skin_bytes):
         skin_bytes = bytes(skin_bytes)
 
+        # Отправляем данные для регистрации
         response = requests.post("https://wacodb-production.up.railway.app/database/", json={
             "action": "register",
             "nickname": nickname,
@@ -118,53 +119,64 @@ class Api:
         })
 
         if response.status_code == 200:
+            # Открываем изображение скина
             image = Image.open(io.BytesIO(skin_bytes))
-            image_file = io.BytesIO()
-            image.save(image_file, format='PNG')
-            image_file.seek(0)
 
-            encoded_image = base64.b64encode(image_file.getvalue()).decode('utf-8')
+            # Вырезаем голову (координаты для Minecraft-скина)
+            head_box = (8, 8, 16, 16)
+            head = image.crop(head_box)
+            head = head.resize((40, 40), Image.Resampling.LANCZOS)
 
-            headers = {
-                'Authorization': f'token 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',
-                'Accept': 'application/vnd.github.v3+json',
-            }
+            # Сохраняем и полный скин, и голову
+            for file_suffix, img in zip(["skin", "head"], [image, head]):
+                # Сохраняем изображение в буфер
+                image_file = io.BytesIO()
+                img.save(image_file, format='PNG')
+                image_file.seek(0)
 
-            # Проверяем, существует ли файл
-            upload_url = f'https://api.github.com/repos/Homanti/wacoskins/contents/{nickname}.png'
-            response_check = requests.get(upload_url, headers=headers)
+                # Кодируем изображение в base64
+                encoded_image = base64.b64encode(image_file.getvalue()).decode('utf-8')
 
-            if response_check.status_code == 200:
-                # Файл существует, получаем информацию о нём для удаления
-                file_info = response_check.json()
-                sha = file_info['sha']
+                headers = {
+                    'Authorization': f'token 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',
+                    'Accept': 'application/vnd.github.v3+json',
+                }
 
-                # Удаляем существующий файл
-                delete_data = {
-                    'message': 'Delete existing skin image',
-                    'sha': sha,
+                # Проверяем, существует ли файл
+                upload_url = f'https://api.github.com/repos/Homanti/wacoskins/contents/{nickname}_{file_suffix}.png'
+                response_check = requests.get(upload_url, headers=headers)
+
+                if response_check.status_code == 200:
+                    # Файл существует, получаем информацию о нём для удаления
+                    file_info = response_check.json()
+                    sha = file_info['sha']
+
+                    # Удаляем существующий файл
+                    delete_data = {
+                        'message': f'Delete existing {file_suffix} image',
+                        'sha': sha,
+                        'branch': 'main'
+                    }
+                    response_delete = requests.delete(upload_url, headers=headers, json=delete_data)
+
+                    if response_delete.status_code in (200, 204):
+                        print(f"Existing {file_suffix} image deleted successfully.")
+                    else:
+                        print(f"Failed to delete existing {file_suffix} image: {response_delete.status_code} - {response_delete.json().get('message', 'Unknown error')}")
+
+                # Теперь загружаем новое изображение
+                data = {
+                    'message': f'Upload {file_suffix} image',
+                    'content': encoded_image,
                     'branch': 'main'
                 }
-                response_delete = requests.delete(upload_url, headers=headers, json=delete_data)
 
-                if response_delete.status_code in (200, 204):
-                    print("Existing image deleted successfully.")
+                response_upload = requests.put(upload_url, headers=headers, json=data)
+
+                if response_upload.status_code in (201, 200):
+                    print(f"{file_suffix.capitalize()} image uploaded successfully.")
                 else:
-                    print(f"Failed to delete existing image: {response_delete.status_code} - {response_delete.json().get('message', 'Unknown error')}")
-
-            # Теперь загружаем новое изображение
-            data = {
-                'message': 'Upload skin image',
-                'content': encoded_image,
-                'branch': 'main'
-            }
-
-            response_upload = requests.put(upload_url, headers=headers, json=data)
-
-            if response_upload.status_code in (201, 200):
-                print("Image uploaded successfully.")
-            else:
-                print(f"Image upload failed: {response_upload.status_code} - {response_upload.json().get('message', 'Unknown error')}")
+                    print(f"Image upload failed: {response_upload.status_code} - {response_upload.json().get('message', 'Unknown error')}")
 
             return self.account_login(nickname, password)
         else:

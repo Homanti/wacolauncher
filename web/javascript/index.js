@@ -43,12 +43,12 @@ function updateDropdown(accounts) {
         var accountButton = document.createElement('button');
         accountButton.className = 'profile-button';
         accountButton.onclick = function() {
-            switchAccount(account.nickname, account.password, 'https://placehold.co/50x50'); // Используйте актуальные URL для аватаров
+            switchAccount(account.nickname, account.password, `https://github.com/Homanti/wacoskins/blob/main/${account.nickname}_head.png?raw=true`); // Используйте актуальные URL для аватаров
         };
 
         // Создаем аватар и имя профиля
         var avatar = document.createElement('img');
-        avatar.src = 'https://placehold.co/50x50'; // Используйте актуальные URL для аватаров
+        avatar.src = `https://github.com/Homanti/wacoskins/blob/main/${account.nickname}_head.png?raw=true`; // Используйте актуальные URL для аватаров
         avatar.alt = 'Avatar';
         avatar.className = 'profile-avatar';
 
@@ -66,7 +66,7 @@ function updateDropdown(accounts) {
         // Если аккаунт активен, обновляем текущий профиль
         if (account.active) {
             document.getElementById("currentProfileName").textContent = account.nickname;
-            document.getElementById("currentAvatar").src = 'https://placehold.co/50x50'; // Используйте актуальные URL для аватаров
+            document.getElementById("currentAvatar").src = `https://github.com/Homanti/wacoskins/blob/main/${account.nickname}_head.png?raw=true`; // Используйте актуальные URL для аватаров
         }
 
         dropdownMenu.appendChild(accountButton);
