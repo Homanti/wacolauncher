@@ -75,10 +75,10 @@ class Api:
     def load_tab(self, html_name):
         window.load_url(f'file://{os.path.abspath("web/" + html_name)}')
 
-    def account_login(self, login, password):
+    def account_login(self, nickname, password):
         response = requests.post(
             "https://wacodb-production.up.railway.app/database/",
-            json={"action": "login", "nickname": login, "password": password}
+            json={"action": "login", "nickname": nickname, "password": password}
         )
 
         if response.status_code == 200:
@@ -88,7 +88,7 @@ class Api:
         elif response.status_code == 401:
             data = readJson("data/credentials.json")
             if data:
-                data = [item for item in data if not (item['nickname'] == login and item['password'] == password)]
+                data = [item for item in data if not (item['nickname'] == nickname and item['password'] == password)]
                 writeJson("data/credentials.json", data)
 
             print(f"Login failed: {response.json()['detail']}")
@@ -96,13 +96,26 @@ class Api:
         else:
             return 502
 
-    def account_register(self, login, password):
+    def account_register(self, nickname, password, rp_history, how_did_you_find, skin_direction):
         response = requests.post(
             "https://wacodb-production.up.railway.app/database/",
-            json={"action": "register", "nickname": login, "password": password}
+            json={"action": "register", "nickname": nickname, "password": password, "rp_history": rp_history, "how_did_you_find": how_did_you_find}
         )
+
         if response.status_code == 200:
-            return self.account_login(login, password)
+            with open(skin_direction, 'rb') as file:
+                response = requests.post(
+                    "https://wacodb-production.up.railway.app/upload_skin/",
+                    data={"action": "upload_skin", "nickname": nickname, "password": password},
+                    files={"file": file}
+                )
+
+            if response.status_code == 200:
+                return self.account_login(nickname, password)
+            else:
+                print(f"Registration failed: {response.json()['detail']}")
+                return 502
+
         else:
             print(f"Registration failed: {response.json()['detail']}")
             return 502

@@ -1,14 +1,14 @@
 const nickname = document.getElementById('input_register_nickname');
 const password = document.getElementById('input_register_password');
 const history = document.getElementById('input_register_history');
-const whereInfo = document.getElementById('input_register_where_info');
+const how_did_you_find = document.getElementById('input_register_how_did_you_find');
 const skin = document.getElementById('input_register_skin');
 const rulesCheckbox = document.getElementById('checkbox_register_rules');
 const registerButton = document.getElementById('btn_register');
 
 document.addEventListener('DOMContentLoaded', function () {
 function validateForm() {
-    const fields = [nickname, password, history, whereInfo];
+    const fields = [nickname, password, history, how_did_you_find];
     const isFormValid = fields.every(field => field.value.trim() !== '') &&
                         skin.files.length > 0 &&
                         rulesCheckbox.checked;
@@ -21,7 +21,7 @@ function validateForm() {
     nickname.addEventListener('input', validateForm);
     password.addEventListener('input', validateForm);
     history.addEventListener('input', validateForm);
-    whereInfo.addEventListener('input', validateForm);
+    how_did_you_find.addEventListener('input', validateForm);
     skin.addEventListener('input', validateForm);
     rulesCheckbox.addEventListener('change', validateForm);
 
@@ -31,7 +31,7 @@ function validateForm() {
 
 async function register_account() {
     try {
-        const result = await window.pywebview.api.account_register(nickname.value, password.value);
+        const result = await window.pywebview.api.account_register(nickname.value, password.value, history.value, how_did_you_find.value, skin.value);
 
         if (Array.isArray(result)) {
             if (result[3]) {
