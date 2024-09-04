@@ -1,3 +1,4 @@
+import base64
 import json
 import webbrowser
 from io import BytesIO
@@ -7,7 +8,7 @@ import os
 import requests
 
 def readJson(filename):  # чтение json файлов
-    if filename.startswith('https://'):
+    if filename.startswith('http://'):
         try:
             response = requests.get(filename)
             response.raise_for_status()
@@ -79,7 +80,7 @@ class Api:
 
     def account_login(self, nickname, password):
         response = requests.post(
-            "https://wacodb-production.up.railway.app/database/",
+            "https://wacodb-production.up.railway.app//database/",
             json={"action": "login", "nickname": nickname, "password": password}
         )
 
@@ -99,41 +100,24 @@ class Api:
             return 502
 
     def account_register(self, nickname, password, rp_history, how_did_you_find, skin_bytes):
-        # Выполняем регистрацию пользователя
-        response = requests.post(
-            "https://wacodb-production.up.railway.app/database/",
-            json={
-                "action": "register",
-                "nickname": nickname,
-                "password": password,
-                "rp_history": rp_history,
-                "how_did_you_find": how_did_you_find
-            }
-        )
+        if isinstance(skin_bytes, list):
+            skin_bytes = bytes(skin_bytes)
+
+        if isinstance(skin_bytes, (bytearray, bytes)):
+            encoded_file = base64.b64encode(skin_bytes).decode('utf-8')
+        else:
+            raise ValueError(f"Ожидались байты, но был получен {type(skin_bytes)}")
+
+        response = requests.post("https://wacodb-production.up.railway.app//database/", json={"action": "register","nickname": nickname, "password": password, "rp_history": rp_history, "how_did_you_find": how_did_you_find, "skin_bytes": encoded_file})
 
         if response.status_code == 200:
-            try:
-                skin_file = BytesIO(bytes(skin_bytes))
-                response = requests.post(
-                    "https://wacodb-production.up.railway.app/upload_skin/",
-                    data={"action": "upload_skin", "nickname": nickname, "password": password},
-                    files={"skin_png": skin_file}
+            response = requests.post("https://wacodb-production.up.railway.app//database/", json={"action": "upload_skin","nickname": nickname,"password": password,"skin_bytes": encoded_file}
+            )
+            if response.status_code == 200:
+                return self.account_login(nickname, password)
+            else:
+                requests.post("https://wacodb-production.up.railway.app//database/", json={"action": "delete", "nickname": nickname, "password": password}
                 )
-
-                if response.status_code == 200:
-                    return self.account_login(nickname, password)
-                else:
-                    response = requests.post(
-                        "https://wacodb-production.up.railway.app/database/",
-                        json={"action": "delete", "nickname": nickname, "password": password}
-                    )
-                    print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
-                    return 502
-
-            except Exception as e:
-                print(f"File upload failed: {str(e)}")
-                return 502
-
         else:
             print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
             return 502

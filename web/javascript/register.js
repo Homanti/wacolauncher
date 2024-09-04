@@ -40,7 +40,7 @@ async function register_account() {
                 password.value,
                 history.value,
                 how_did_you_find.value,
-                Array.from(fileBytes)
+                fileBytes
             );
 
             if (Array.isArray(result)) {
