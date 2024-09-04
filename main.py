@@ -1,11 +1,12 @@
 import base64
 import json
 import webbrowser
-from io import BytesIO
-
 import webview
 import os
 import requests
+
+if not os.path.exists("data"):
+    os.makedirs("data")
 
 def readJson(filename):  # чтение json файлов
     if filename.startswith('http://'):
@@ -80,7 +81,7 @@ class Api:
 
     def account_login(self, nickname, password):
         response = requests.post(
-            "https://wacodb-production.up.railway.app//database/",
+            "https://wacodb-production.up.railway.app/database/",
             json={"action": "login", "nickname": nickname, "password": password}
         )
 
@@ -104,23 +105,36 @@ class Api:
             skin_bytes = bytes(skin_bytes)
 
         if isinstance(skin_bytes, (bytearray, bytes)):
-            encoded_file = base64.b64encode(skin_bytes).decode('utf-8')
+            response = requests.post("https://wacodb-production.up.railway.app/database/", json={
+                "action": "register",
+                "nickname": nickname,
+                "password": password,
+                "rp_history": rp_history,
+                "how_did_you_find": how_did_you_find
+            })
+
+            if response.status_code == 200:
+                files = {'skin_file': ('skin.png', skin_bytes, 'image/png')}
+                response = requests.post("https://wacodb-production.up.railway.app/database/", data={
+                    "action": "upload_skin",
+                    "nickname": nickname,
+                    "password": password
+                }, files=files)
+
+                if response.status_code == 200:
+                    return self.account_login(nickname, password)
+                else:
+                    requests.post("https://wacodb-production.up.railway.app/database/", json={
+                        "action": "delete",
+                        "nickname": nickname,
+                        "password": password
+                    })
+                    print(f"Skin upload failed: {response.json().get('detail', 'Unknown error')}")
+            else:
+                print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
+                return 502
         else:
             raise ValueError(f"Ожидались байты, но был получен {type(skin_bytes)}")
-
-        response = requests.post("https://wacodb-production.up.railway.app//database/", json={"action": "register","nickname": nickname, "password": password, "rp_history": rp_history, "how_did_you_find": how_did_you_find, "skin_bytes": encoded_file})
-
-        if response.status_code == 200:
-            response = requests.post("https://wacodb-production.up.railway.app//database/", json={"action": "upload_skin","nickname": nickname,"password": password,"skin_bytes": encoded_file}
-            )
-            if response.status_code == 200:
-                return self.account_login(nickname, password)
-            else:
-                requests.post("https://wacodb-production.up.railway.app//database/", json={"action": "delete", "nickname": nickname, "password": password}
-                )
-        else:
-            print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
-            return 502
 
     def check_discord_link(self):
         data = readJson("data/credentials.json")
@@ -157,4 +171,4 @@ class Api:
 if __name__ == '__main__':
     api = Api()
     window = webview.create_window(title="WacoLauncher", url="web/login.html", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(api.check_login,debug=True)
+    webview.start(api.check_login, debug=True)
