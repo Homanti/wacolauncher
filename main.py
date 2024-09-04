@@ -1,12 +1,12 @@
 import base64
 import json
 import webbrowser
+import io
 import webview
 import os
 import requests
+from PIL import Image
 
-if not os.path.exists("data"):
-    os.makedirs("data")
 
 def readJson(filename):  # чтение json файлов
     if filename.startswith('http://'):
@@ -81,7 +81,7 @@ class Api:
 
     def account_login(self, nickname, password):
         response = requests.post(
-            "https://wacodb-production.up.railway.app/database/",
+            "https://wacodb-production.up.railway.app//database/",
             json={"action": "login", "nickname": nickname, "password": password}
         )
 
@@ -101,40 +101,44 @@ class Api:
             return 502
 
     def account_register(self, nickname, password, rp_history, how_did_you_find, skin_bytes):
-        if isinstance(skin_bytes, list):
-            skin_bytes = bytes(skin_bytes)
+        response = requests.post("https://wacodb-production.up.railway.app//database/", json={
+            "action": "register",
+            "nickname": nickname,
+            "password": password,
+            "rp_history": rp_history,
+            "how_did_you_find": how_did_you_find
+        })
 
-        if isinstance(skin_bytes, (bytearray, bytes)):
-            response = requests.post("https://wacodb-production.up.railway.app/database/", json={
-                "action": "register",
-                "nickname": nickname,
-                "password": password,
-                "rp_history": rp_history,
-                "how_did_you_find": how_did_you_find
-            })
+        if response.status_code == 200:
+            image = Image.open(io.BytesIO(skin_bytes))
+            image_file = io.BytesIO()
+            image.save(image_file, format='PNG')
+            image_file.seek(0)
 
-            if response.status_code == 200:
-                files = {'skin_file': ('skin.png', skin_bytes, 'image/png')}
-                response = requests.post("https://wacodb-production.up.railway.app/database/", data={
-                    "action": "upload_skin",
-                    "nickname": nickname,
-                    "password": password
-                }, files=files)
+            encoded_image = base64.b64encode(image_file.getvalue()).decode('utf-8')
 
-                if response.status_code == 200:
-                    return self.account_login(nickname, password)
-                else:
-                    requests.post("https://wacodb-production.up.railway.app/database/", json={
-                        "action": "delete",
-                        "nickname": nickname,
-                        "password": password
-                    })
-                    print(f"Skin upload failed: {response.json().get('detail', 'Unknown error')}")
+            headers = {
+                'Authorization': f'token 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',
+                'Accept': 'application/vnd.github.v3+json',
+            }
+
+            data = {
+                'message': 'Upload skin image',
+                'content': encoded_image,
+                'branch': 'main'
+            }
+
+            response_upload = requests.put(f'https://api.github.com/repos/Homanti/wacoskins/{nickname}.png', headers=headers, json=data)
+
+            if response_upload.status_code in (201, 200):
+                print("Image uploaded successfully.")
             else:
-                print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
-                return 502
+                print(f"Image upload failed: {response_upload.json().get('message', 'Unknown error')}")
+
+            return self.account_login(nickname, password)
         else:
-            raise ValueError(f"Ожидались байты, но был получен {type(skin_bytes)}")
+            print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
+            return 502
 
     def check_discord_link(self):
         data = readJson("data/credentials.json")
@@ -171,4 +175,4 @@ class Api:
 if __name__ == '__main__':
     api = Api()
     window = webview.create_window(title="WacoLauncher", url="web/login.html", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(api.check_login, debug=True)
+    webview.start(api.check_login,debug=True)
