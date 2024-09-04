@@ -223,13 +223,21 @@ body, html {
 .range-container {
     padding-top: 10px;
     padding-bottom: 10px;
-    padding-right: 5px;
+}
+
+.range-container>p {
+    margin-left: 5px;
 }
 
 .range-input {
     display: flex;
     align-items: center;
     justify-content: center;
+}
+
+.range-input>p {
+    margin-left: 5px;
+    margin-right: 5px;
 }
 
 .range-input>.form-range {
