@@ -96,3 +96,27 @@ document.getElementById("button_update_password").addEventListener("click", asyn
         show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
     }
 })
+
+document.getElementById("button_delete_account").addEventListener("click", async function() {
+    const accounts = await get_accounts();
+    const password = document.getElementById("input_password").value;
+
+    let activeAccount = null;
+
+    for (let i = 0; i < accounts.length; i++) {
+        if (accounts[i]["active"]) {
+            activeAccount = accounts[i];
+            break;
+        }
+    }
+
+    const result = await window.pywebview.api.delete_account(activeAccount["nickname"], password);
+
+    if (result === 200) {
+        show_info_modal("Успешно", "Аккаунт успешно удален")
+    } else if (result === 401) {
+        show_info_modal("Ошибка", "Неверный пароль")
+    } else {
+        show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
+    }
+})

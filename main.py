@@ -232,15 +232,30 @@ class Api:
             return 200
 
         elif response.status_code == 401:
-            data = readJson("data/credentials.json")
-            if data:
-                data = [item for item in data if not (item['nickname'] == nickname and item['password'] == password)]
-                writeJson("data/credentials.json", data)
-
             print(f"Login failed: {response.json()['detail']}")
             return 401
         else:
             return 502
+
+    def delete_account(self, nickname, password):
+        response = requests.post(
+            "https://wacodb-production.up.railway.app/database/",
+            json={"action": "delete", "nickname": nickname, "password": password}
+        )
+
+        if response.status_code == 200:
+            data = readJson("data/credentials.json")
+            if data:
+                data = [item for item in data if not (item['nickname'] == nickname and item['password'] == password)]
+                writeJson("data/credentials.json", data)
+            return 200
+
+        elif response.status_code == 401:
+            print(f"Login failed: {response.json()['detail']}")
+            return 401
+        else:
+            return 502
+
 
 
 if __name__ == '__main__':
