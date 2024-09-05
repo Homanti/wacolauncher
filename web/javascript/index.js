@@ -104,3 +104,7 @@ window.onclick = function(event) {
         }
     }
 }
+
+document.getElementById('btn_play').addEventListener('click', async function () {
+    window.pywebview.api.start_minecraft()
+});

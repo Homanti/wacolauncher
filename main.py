@@ -1,14 +1,21 @@
 import asyncio
 import base64
 import json
+import shutil
+import subprocess
 import webbrowser
 import io
+from urllib.parse import urlsplit
 import aiohttp
 import webview
 import os
 import requests
 from PIL import Image
+import minecraft_launcher_lib
 
+appdata_path = os.path.expandvars('%APPDATA%')
+minecraft_dir = appdata_path + "/.wacorp"
+downloading = False
 
 def createFolderIfNeeded(folder_name):
     if not os.path.exists(folder_name):
@@ -16,9 +23,10 @@ def createFolderIfNeeded(folder_name):
         print(f"Папка {folder_name} создана")
 
 createFolderIfNeeded("data")
+createFolderIfNeeded(minecraft_dir)
 
 def readJson(filename):  # чтение json файлов
-    if filename.startswith('http://'):
+    if filename.startswith('https://') or filename.startswith('http://'):
         try:
             response = requests.get(filename)
             response.raise_for_status()
@@ -84,10 +92,82 @@ def save_account(nickname, password):
     except Exception as e:
         print(f"Ошибка при обработке файла data/credentials.json: {e}, информация которая записывалась в файл {new_account_data}")
 
+def file_download(url, folder_path, what):
+    global downloading
+    # Создаем директорию, если она не существует
+    os.makedirs(folder_path, exist_ok=True)
+
+    api = Api()
+
+    try:
+        # Получаем ответ от сервера
+        response = requests.get(url, stream=True)
+        total_length = response.headers.get('content-length')
+
+        # Пытаемся получить имя файла из заголовков
+        if 'Content-Disposition' in response.headers:
+            filename = response.headers.get('Content-Disposition').split('filename=')[-1].strip('"')
+        else:
+            filename = os.path.basename(urlsplit(url).path)
+
+        file_path = os.path.join(folder_path, filename)
+
+        if total_length is None:
+            api.progress_bar_set(0, what)
+        else:
+            dl = 0
+            total_length = int(total_length)
+            with open(file_path, 'wb') as file:
+                for data in response.iter_content(chunk_size=4096):
+                    downloading = True
+                    dl += len(data)
+                    file.write(data)
+                    progress = round(dl / total_length * 100, 2)
+                    api.progress_bar_set(progress, what)
+
+            print(f"Файл успешно загружен и сохранен в {file_path}.")
+
+    except requests.exceptions.RequestException as e:
+        print(f"Ошибка загрузки файла: {e}")
+        return False
+
+    downloading = False
+    return True
+
+def show_minecraft_install_progress(progress, total, status):
+    percent = float((progress / total) * 100)
+
+    if "Download" in status:
+        status = status.replace("Download", "")
+
+    api = Api()
+    api.open_progress_bar(True)
+    api.progress_bar_set(percent, "Minecraft: " + status)
+
+def remove_file(filepath):
+    try:
+        os.remove(filepath)
+        print(f"Файл {filepath} успешно удален.")
+    except FileNotFoundError:
+        print(f"Файл {filepath} не найден.")
+    except Exception as e:
+        print(f"Ошибка при удалении файла {filepath}: {e}")
+
+def remove_directory(dirpath):
+    try:
+        shutil.rmtree(dirpath)
+        print(f"Директория {dirpath} и все ее содержимое успешно удалены.")
+    except FileNotFoundError:
+        print(f"Директория {dirpath} не найдена.")
+    except Exception as e:
+        print(f"Ошибка при удалении директории {dirpath}: {e}")
 
 class Api:
     def load_tab(self, html_name):
         window.load_url(f'file://{os.path.abspath("web/" + html_name)}')
+        if html_name == "index.html" and downloading:
+            self.open_progress_bar(True)
+            self.disable_button("btn_play", True)
 
     def account_login(self, nickname, password):
         response = requests.post(
@@ -255,7 +335,229 @@ class Api:
         else:
             return 502
 
+    def progress_bar_set(self, percent, what):
+        window.evaluate_js(f"""
+        document.getElementById('progress_bar').style.width = '{percent}%';
+        document.getElementById('progress_text').textContent = 'Установка {what}... {round(percent, 2)}%';
+        """)
 
+    def open_progress_bar(self, status):
+        if status:
+            window.evaluate_js(f"""
+            const progressBarContainer = document.querySelector('.progress-bar-container');
+            progressBarContainer.style.marginTop = '-30px';
+            """)
+        else:
+            window.evaluate_js(f"""
+            const progressBarContainer = document.querySelector('.progress-bar-container');
+            progressBarContainer.style.marginTop = '0';
+            """)
+
+    def disable_button(self, button_id, status):
+        if status:
+            status = "true"
+            if button_id == "profile_button":
+                window.evaluate_js(f"""
+                document.getElementById('profile_button').onclick = null;
+                """)
+        else:
+            status = "false"
+            if button_id == "profile_button":
+                window.evaluate_js(f"""
+                document.getElementById('profile_button').onclick = toggleDropdown;
+                """)
+
+        window.evaluate_js(f"""
+        document.getElementById('{button_id}').disabled = {status};
+        """)
+
+    def install_minecraft(self):
+        global downloading
+        max_value = [0]
+        status = [0]
+        downloading = True
+        self.disable_button("btn_play", True)
+        self.disable_button("profile_button", True)
+        self.disable_button("btn_settings", True)
+
+        callback = {
+            "setStatus": lambda value: status.__setitem__(0, value),
+            "setProgress": lambda value: show_minecraft_install_progress(value, max_value[0], status[0]),
+            "setMax": lambda value: max_value.__setitem__(0, value)
+        }
+
+        minecraft_launcher_lib.forge.install_forge_version("1.20.1-47.3.7", minecraft_dir, callback=callback)
+        downloading = False
+        self.open_progress_bar(False)
+        self.disable_button("btn_play", False)
+        self.disable_button("profile_button", False)
+        self.disable_button("btn_settings", False)
+
+    def install_mods(self):
+        global downloading
+        # Читаем текущие данные
+        list_mods = readJson(minecraft_dir + "\\minecraft_version.json")
+        latest_list_mods = readJson("https://raw.githubusercontent.com/Homanti/wacominecraft/main/mods.json")
+
+        if list_mods is None:
+            list_mods = {}
+        if "mods" not in list_mods:
+            list_mods["mods"] = []
+
+        if latest_list_mods and "mods" in latest_list_mods:
+            downloading = True
+            self.open_progress_bar(True)
+            self.disable_button("btn_play", True)
+            self.disable_button("profile_button", True)
+            self.disable_button("btn_settings", True)
+
+            current_mods_set = set(list_mods["mods"])
+            latest_mods_set = set(latest_list_mods["mods"])
+
+            mods_to_add = latest_mods_set - current_mods_set
+            mods_to_remove = current_mods_set - latest_mods_set
+
+            for mod in mods_to_remove:
+                mod_path = os.path.join(minecraft_dir, "mods", mod)
+                if os.path.exists(mod_path):
+                    os.remove(mod_path)
+                    print(f"Удален мод: {mod}")
+
+            for mod in mods_to_add:
+                mod_path = os.path.join(minecraft_dir, "mods")
+                file_download(f"https://github.com/Homanti/wacominecraft/raw/main/mods/{mod}", mod_path, "модов: " + mod)
+
+            downloading = False
+            self.open_progress_bar(False)
+            self.disable_button("btn_play", False)
+            self.disable_button("profile_button", False)
+            self.disable_button("btn_settings", False)
+
+            # Обновляем список модов и записываем обновленные данные в файл
+            list_mods["mods"] = latest_list_mods["mods"]
+            writeJson(minecraft_dir + "\\minecraft_version.json", list_mods)
+        else:
+            print("Ошибка: не удалось загрузить список последних модов.")
+
+    def install_rp(self):
+        global downloading
+        # Читаем текущие данные
+        rp_version = readJson(minecraft_dir + "\\minecraft_version.json")
+        latest_minecraft_version = readJson("https://pastebin.com/raw/70N3V9Nj")
+
+        if rp_version is None:
+            rp_version = {}
+        if "rp_version" not in rp_version:
+            rp_version["rp_version"] = None
+
+        if latest_minecraft_version and "rp_version" in latest_minecraft_version:
+            downloading = True
+            self.open_progress_bar(True)
+            self.disable_button("btn_play", True)
+            self.disable_button("profile_button", True)
+            self.disable_button("btn_settings", True)
+
+            remove_file(minecraft_dir + "/resourcepacks/WacoRP.zip")
+            file_download(url="https://github.com/Homanti/wacominecraft/raw/main/WacoRP.zip", folder_path=minecraft_dir + "/resourcepacks", what="ресурс пака")
+
+            downloading = False
+            self.open_progress_bar(False)
+            self.disable_button("btn_play", False)
+            self.disable_button("profile_button", False)
+            self.disable_button("btn_settings", False)
+
+            # Обновляем версию ресурс пака и записываем обновленные данные в файл
+            rp_version["rp_version"] = latest_minecraft_version["rp_version"]
+            writeJson(minecraft_dir + "\\minecraft_version.json", rp_version)
+        else:
+            print("Ошибка: не удалось загрузить данные для ресурс пака.")
+
+    def install_pointblank(self):
+        global downloading
+        # Читаем текущие данные
+        pointblank_version = readJson(minecraft_dir + "\\minecraft_version.json")
+        latest_pointblank_version = readJson("https://pastebin.com/raw/70N3V9Nj")
+
+        if pointblank_version is None:
+            pointblank_version = {}
+        if "pointblank" not in pointblank_version:
+            pointblank_version["pointblank"] = None
+
+        if latest_pointblank_version and "pointblank" in latest_pointblank_version:
+            downloading = True
+            self.open_progress_bar(True)
+            self.disable_button("btn_play", True)
+            self.disable_button("profile_button", True)
+            self.disable_button("btn_settings", True)
+
+            remove_directory(minecraft_dir + "/pointblank")
+            file_download(url="https://github.com/Homanti/wacominecraft/raw/main/pointblank.zip", folder_path=minecraft_dir + "/pointblank", what="ресурс пака")
+
+            downloading = False
+            self.open_progress_bar(False)
+            self.disable_button("btn_play", False)
+            self.disable_button("profile_button", False)
+            self.disable_button("btn_settings", False)
+
+            # Обновляем версию pointblank и записываем обновленные данные в файл
+            pointblank_version["pointblank"] = latest_pointblank_version["pointblank"]
+            writeJson(minecraft_dir + "\\minecraft_version.json", pointblank_version)
+        else:
+            print("Ошибка: не удалось загрузить данные для pointblank.")
+
+    def check_minecraft_installation(self):
+        if os.path.exists(minecraft_dir + "/versions/1.20.1-forge-47.3.7/1.20.1-forge-47.3.7.jar"):
+            return True
+        else:
+            return False
+
+    def check_mods_installation(self):
+        list_mods = readJson(minecraft_dir + "\\minecraft_version.json")
+        latest_list_mods = readJson("https://github.com/Homanti/wacominecraft/raw/main/mods.json")
+
+        if list_mods and latest_list_mods:
+            return list_mods.get("mods") == latest_list_mods.get("mods")
+        return False
+
+    def check_rp_installation(self):
+        rp_version = readJson(minecraft_dir + "\\minecraft_version.json")
+        latest_minecraft_version = readJson("https://pastebin.com/raw/70N3V9Nj")
+
+        if rp_version and latest_minecraft_version:
+            return rp_version.get("rp_version") == latest_minecraft_version.get("rp_version") and os.path.exists(minecraft_dir + "/resourcepacks/WacoRP.zip")
+        return False
+
+    def check_pointblank_installation(self):
+        pointblank_version = readJson(minecraft_dir + "\\minecraft_version.json")
+        latest_pointblank_version = readJson("https://pastebin.com/raw/70N3V9Nj")
+
+        if pointblank_version and latest_pointblank_version:
+            return pointblank_version.get("pointblank") == latest_pointblank_version.get("pointblank") and os.path.exists(minecraft_dir + "/pointblank")
+        return False
+
+    def start_minecraft(self):
+        if self.check_minecraft_installation() and self.check_mods_installation() and self.check_rp_installation() and self.check_pointblank_installation():
+            data = readJson("data/credentials.json")
+            if data:
+                for item in data:
+                    if item['active']:
+                        options = {
+                            "username": item['nickname'],
+                            "jvmArguments": ["-Xmx8G", "-Xms8G"]
+                        }
+                        subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.7", minecraft_dir, options=options))
+        else:
+            if not self.check_minecraft_installation():
+                self.install_minecraft()
+
+            if not self.check_mods_installation():
+                self.install_mods()
+
+            if not self.check_rp_installation():
+                self.install_rp()
+
+            if not self.check_pointblank_installation():
+                self.install_pointblank()
 
 if __name__ == '__main__':
     api = Api()
