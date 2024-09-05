@@ -160,9 +160,13 @@ body, html {
     box-shadow: 0 12px 16px 0 rgba(0,0,0,0.24), 0 17px 50px 0 rgba(0,0,0,0.19); /* Тень при наведении */
 }
 
-/* Эффект при нажатии на кнопку "профиля" */
 .profile-button:active {
-    background-color: #333; /* Темный цвет фона при нажатии */
+    background-color: #333;
+}
+
+.profile-button:disabled:hover {
+    background-color: #333;
+    box-shadow: unset;
 }
 
 /* Стили для аватара в кнопке профиля */

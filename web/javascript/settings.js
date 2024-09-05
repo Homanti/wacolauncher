@@ -1,10 +1,10 @@
 var skin = document.getElementById("input_skin");
 
-document.getElementById("ram-range").addEventListener("input", function() {
-    document.getElementById("ram-input").value = this.value;
+document.getElementById("ram_range").addEventListener("input", function() {
+    document.getElementById("ram_input").value = this.value;
 });
 
-document.getElementById("ram-input").addEventListener("blur", function() {
+document.getElementById("ram_input").addEventListener("blur", function() {
     const min = parseInt(this.min);
     const max = parseInt(this.max);
     let value = parseInt(this.value);
@@ -16,7 +16,7 @@ document.getElementById("ram-input").addEventListener("blur", function() {
     }
 
     this.value = value;
-    document.getElementById("ram-range").value = value;
+    document.getElementById("ram_range").value = value;
 });
 
 document.getElementById("type-change-skin").addEventListener("input", function() {
@@ -30,6 +30,19 @@ document.getElementById("type-change-skin").addEventListener("input", function()
 async function get_accounts() {
     return await window.pywebview.api.get_accounts();
 }
+
+window.addEventListener('pywebviewready', async function() {
+    const max_ram = await window.pywebview.api.get_max_ram();
+    const data = await window.pywebview.api.readJson("data/settings.json");
+    const ram = data["ram"];
+
+    document.getElementById("ram_input").max = max_ram;
+    document.getElementById("ram_range").max = max_ram;
+
+    document.getElementById("ram_input").value = ram;
+    document.getElementById("ram_range").value = ram;
+});
+
 
 document.getElementById("button_upload_skin").addEventListener("click", async function() {
     try {
@@ -120,3 +133,24 @@ document.getElementById("button_delete_account").addEventListener("click", async
         show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
     }
 })
+
+document.getElementById("ram_range").addEventListener("input", async function() {
+    let settings_json = await window.pywebview.api.readJson("data/settings.json");
+    if (settings_json === null) {
+        settings_json = {};
+    }
+
+    settings_json["ram"] = document.getElementById("ram_range").value;
+    await window.pywebview.api.writeJson("data/settings.json", settings_json);
+});
+
+document.getElementById("ram_input").addEventListener("blur", async function() {
+    let settings_json = await window.pywebview.api.readJson("data/settings.json");
+    if (settings_json === null) {
+        settings_json = {};
+    }
+
+    settings_json["ram"] = document.getElementById("ram_input").value;
+    await window.pywebview.api.writeJson("data/settings.json", settings_json);
+});
+
