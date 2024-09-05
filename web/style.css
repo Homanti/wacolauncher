@@ -284,15 +284,7 @@ body, html {
 .container-settings-minecraft {
     border-bottom: 1px solid #3e4147;
     border-right: 1px solid #3e4147;
-}
-
-.range-container {
-    padding-top: 10px;
-    padding-bottom: 10px;
-}
-
-.range-container>p {
-    margin-left: 5px;
+    padding: 10px 5px;
 }
 
 .range-input {
@@ -301,19 +293,21 @@ body, html {
     justify-content: center;
 }
 
+.range-input>.form-range {
+    margin-right: 5px;
+}
+
 .range-input>p {
     margin-left: 5px;
     margin-right: 5px;
 }
 
-.range-input>.form-range {
-    display: block;
-    width: 500px;
-    margin: 5px;
-}
-
 .range-input>.form-control {
     width: 100px;
+}
+
+.reinstall-container {
+    margin-top: 10px;
 }
 
 .container-settings-profile {
@@ -326,7 +320,7 @@ body, html {
 
 .container-settings-profile>p {
     display: block;
-    margin: 0 0 5px;
+    margin: 0 0 10px;
 }
 
 /* Modal */

@@ -299,6 +299,8 @@ class Api:
                     if isinstance(result, list):
                         if result[3]:
                             self.load_tab("index.html")
+                            if not self.check_minecraft_installation() or not self.check_mods_installation() or not self.check_rp_installation() or not self.check_pointblank_installation():
+                                self.change_innerHTML("btn_play", "Установить")
                         else:
                             self.load_tab("link_discord_register.html")
 
@@ -411,124 +413,106 @@ class Api:
         list_mods = minecraft_version["mods"]
         latest_list_mods = latest_minecraft_version["mods"]
 
-        if list_mods != latest_list_mods:
-            downloading = True
-            self.open_progress_bar(True)
-            self.disable_button("btn_play", True)
-            self.disable_button("profile_button", True)
-            self.disable_button("btn_settings", True)
-            self.change_innerHTML("btn_play", 'Установка...')
+        downloading = True
+        self.open_progress_bar(True)
+        self.disable_button("btn_play", True)
+        self.disable_button("profile_button", True)
+        self.disable_button("btn_settings", True)
+        self.change_innerHTML("btn_play", 'Установка...')
 
-            mods_dir = os.path.join(minecraft_dir, "mods")
+        mods_dir = os.path.join(minecraft_dir, "mods")
 
-            if not os.path.exists(mods_dir):
-                os.makedirs(mods_dir)
+        if not os.path.exists(mods_dir):
+            os.makedirs(mods_dir)
 
-            current_mods_set = set(list_mods)
-            latest_mods_set = set(latest_list_mods)
+        mods_to_remove = list(set(list_mods) - set(latest_list_mods))
+        mods_to_install = list(set(latest_list_mods) - set(list_mods))
 
-            mods_to_remove = current_mods_set - latest_mods_set
-            mods_to_install = latest_mods_set - current_mods_set
+        for mod in mods_to_remove:
+            mod_path = os.path.join(mods_dir, mod)
+            if os.path.exists(mod_path):
+                os.remove(mod_path)
+                print(f"Удален мод: {mod}")
 
-            for mod in mods_to_remove:
-                mod_path = os.path.join(mods_dir, mod)
-                if os.path.exists(mod_path):
-                    os.remove(mod_path)
-                    print(f"Удален мод: {mod}")
+        for mod in mods_to_install:
+            mod_path = os.path.join(mods_dir, mod)
+            if not os.path.exists(mod_path):
+                print(f"Скачивание мода: {mod}")
+                file_download(f"https://github.com/Homanti/wacominecraft/raw/main/mods/{mod}", mods_dir, f"модов: {mod}")
 
-            for mod in mods_to_install:
-                mod_path = os.path.join(mods_dir, mod)
-                if not os.path.exists(mod_path):
-                    print(f"Скачивание мода: {mod}")
-                    file_download(f"https://github.com/Homanti/wacominecraft/raw/main/mods/{mod}", mods_dir, f"модов: {mod}")
+        for mod in latest_list_mods:
+            if mod not in os.listdir(mods_dir):
+                print(f"Скачивание мода: {mod}")
+                file_download(f"https://github.com/Homanti/wacominecraft/raw/main/mods/{mod}", mods_dir, f"модов: {mod}")
 
-            for mod in latest_list_mods:
-                if mod not in os.listdir(mods_dir):
-                    print(f"Скачивание мода: {mod}")
-                    file_download(f"https://github.com/Homanti/wacominecraft/raw/main/mods/{mod}", mods_dir, f"модов: {mod}")
+        downloading = False
+        self.open_progress_bar(False)
+        self.disable_button("btn_play", False)
+        self.disable_button("profile_button", False)
+        self.disable_button("btn_settings", False)
+        self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
 
-            downloading = False
-            self.open_progress_bar(False)
-            self.disable_button("btn_play", False)
-            self.disable_button("profile_button", False)
-            self.disable_button("btn_settings", False)
-            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
-
-            list_mods = latest_list_mods
-            minecraft_version["mods"] = list_mods
-            self.writeJson(minecraft_dir + "\\minecraft_version.json", minecraft_version)
-        else:
-            print("Ошибка: не удалось загрузить список последних модов.")
+        minecraft_version["mods"] = latest_list_mods
+        self.writeJson(minecraft_dir + "\\minecraft_version.json", minecraft_version)
 
     def install_rp(self):
         global downloading
 
         minecraft_version = self.readJson(minecraft_dir + "\\minecraft_version.json")
         latest_minecraft_version = self.readJson("https://pastebin.com/raw/70N3V9Nj")
-        rp_version = minecraft_version["rp_version"]
         latest_rp_version = latest_minecraft_version["rp_version"]
 
-        if rp_version != latest_rp_version or os.path.exists(minecraft_dir + "/resourcepacks/WacoRP.zip"):
-            downloading = True
-            self.open_progress_bar(True)
-            self.disable_button("btn_play", True)
-            self.disable_button("profile_button", True)
-            self.disable_button("btn_settings", True)
-            self.change_innerHTML("btn_play", 'Установка...')
+        downloading = True
+        self.open_progress_bar(True)
+        self.disable_button("btn_play", True)
+        self.disable_button("profile_button", True)
+        self.disable_button("btn_settings", True)
+        self.change_innerHTML("btn_play", 'Установка...')
 
-            remove_file(minecraft_dir + "/resourcepacks/WacoRP.zip")
-            file_download(url="https://github.com/Homanti/wacominecraft/raw/main/WacoRP.zip", folder_path=minecraft_dir + "/resourcepacks", what="ресурс пака")
+        remove_file(minecraft_dir + "/resourcepacks/WacoRP.zip")
+        file_download(url="https://github.com/Homanti/wacominecraft/raw/main/WacoRP.zip", folder_path=minecraft_dir + "/resourcepacks", what="ресурс пака")
 
-            downloading = False
-            self.open_progress_bar(False)
-            self.disable_button("btn_play", False)
-            self.disable_button("profile_button", False)
-            self.disable_button("btn_settings", False)
-            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
+        downloading = False
+        self.open_progress_bar(False)
+        self.disable_button("btn_play", False)
+        self.disable_button("profile_button", False)
+        self.disable_button("btn_settings", False)
+        self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
 
-            rp_version = latest_rp_version
-            minecraft_version["rp_version"] = rp_version
-            self.writeJson(minecraft_dir + "\\minecraft_version.json", minecraft_version)
-        else:
-            print("Ошибка: не удалось загрузить данные для ресурс пака.")
+        minecraft_version["rp_version"] = latest_rp_version
+        self.writeJson(minecraft_dir + "\\minecraft_version.json", minecraft_version)
 
     def install_pointblank(self):
         global downloading
 
         minecraft_version = self.readJson(minecraft_dir + "\\minecraft_version.json")
         latest_minecraft_version = self.readJson("https://pastebin.com/raw/70N3V9Nj")
-
-        pointblank_version = minecraft_version["pointblank"]
         latest_pointblank_version = latest_minecraft_version["pointblank"]
 
-        if pointblank_version != latest_pointblank_version or not os.path.exists(minecraft_dir + "/pointblank"):
-            downloading = True
-            self.open_progress_bar(True)
-            self.disable_button("btn_play", True)
-            self.disable_button("profile_button", True)
-            self.disable_button("btn_settings", True)
-            self.change_innerHTML("btn_play", 'Установка...')
+        downloading = True
+        self.open_progress_bar(True)
+        self.disable_button("btn_play", True)
+        self.disable_button("profile_button", True)
+        self.disable_button("btn_settings", True)
+        self.change_innerHTML("btn_play", 'Установка...')
 
-            remove_directory(minecraft_dir + "/pointblank")
-            file_download(url="https://github.com/Homanti/wacominecraft/raw/main/pointblank.zip", folder_path=minecraft_dir + "/pointblank", what="ресурс пака")
+        remove_directory(minecraft_dir + "/pointblank")
+        file_download(url="https://github.com/Homanti/wacominecraft/raw/main/pointblank.zip", folder_path=minecraft_dir + "/pointblank", what="ресурс пака")
 
-            with zipfile.ZipFile(minecraft_dir + "/pointblank/pointblank.zip", 'r') as zip_ref:
-                zip_ref.extractall(minecraft_dir)
+        with zipfile.ZipFile(minecraft_dir + "/pointblank/pointblank.zip", 'r') as zip_ref:
+            zip_ref.extractall(minecraft_dir)
 
-            remove_file(minecraft_dir + "/pointblank/pointblank.zip")
+        remove_file(minecraft_dir + "/pointblank/pointblank.zip")
 
-            downloading = False
-            self.open_progress_bar(False)
-            self.disable_button("btn_play", False)
-            self.disable_button("profile_button", False)
-            self.disable_button("btn_settings", False)
-            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
+        downloading = False
+        self.open_progress_bar(False)
+        self.disable_button("btn_play", False)
+        self.disable_button("profile_button", False)
+        self.disable_button("btn_settings", False)
+        self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
 
-            pointblank_version = latest_pointblank_version
-            minecraft_version["pointblank"] = pointblank_version
-            self.writeJson(minecraft_dir + "\\minecraft_version.json", minecraft_version)
-        else:
-            print("Ошибка: не удалось загрузить данные для pointblank.")
+        minecraft_version["pointblank"] = latest_pointblank_version
+        self.writeJson(minecraft_dir + "\\minecraft_version.json", minecraft_version)
 
     def check_minecraft_installation(self):
         if os.path.exists(minecraft_dir + "/versions/1.20.1-forge-47.3.7/1.20.1-forge-47.3.7.jar"):
@@ -554,9 +538,7 @@ class Api:
         rp_version = self.readJson(minecraft_dir + "\\minecraft_version.json")["rp_version"]
         latest_minecraft_version = self.readJson("https://pastebin.com/raw/70N3V9Nj")["rp_version"]
 
-        if rp_version and latest_minecraft_version:
-            return rp_version == latest_minecraft_version and os.path.exists(minecraft_dir + "/resourcepacks/WacoRP.zip")
-        return False
+        return rp_version == latest_minecraft_version and os.path.exists(minecraft_dir + "/resourcepacks/WacoRP.zip")
 
     def check_pointblank_installation(self):
         pointblank_version = self.readJson(minecraft_dir + "\\minecraft_version.json")["rp_version"]
@@ -589,12 +571,28 @@ class Api:
             if not self.check_rp_installation():
                 self.install_rp()
 
-            if not self.check_pointblank_installation():
-                self.install_pointblank()
+        if not self.check_pointblank_installation():
+            self.install_pointblank()
 
     def get_max_ram(self):
         memory_info = psutil.virtual_memory()
-        return round(memory_info.total / (1024 ** 2))
+        return round(memory_info.total / (1024 ** 2))\
+
+    def reinstall(self, what):
+        if what == "minecraft":
+            remove_directory(minecraft_dir)
+            self.load_tab("index.html")
+            self.change_innerHTML("btn_play", "Установить")
+
+        elif what == "mods":
+            remove_directory(minecraft_dir + "mods")
+            self.load_tab("index.html")
+            self.change_innerHTML("btn_play", "Установить")
+
+        elif what == "rp":
+            remove_directory(minecraft_dir + "rp")
+            self.load_tab("index.html")
+            self.change_innerHTML("btn_play", "Установить")
 
 if __name__ == '__main__':
     api = Api()
@@ -605,7 +603,7 @@ if __name__ == '__main__':
         memory_info = psutil.virtual_memory()
         api.writeJson("data/settings.json", {"ram": (round(memory_info.total / (1024 ** 2) / 2))})
 
-    if not minecraft_version or not minecraft_version["mods"] or not minecraft_version["rp_version"] or not minecraft_version["pointblank"]:
+    if not minecraft_version:
         api.writeJson(minecraft_dir + "\\minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
     window = webview.create_window(title="WacoLauncher", url="web/login.html", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
