@@ -159,7 +159,7 @@ def remove_directory(dirpath):
 
 class Api:
     def load_tab(self, html_name):
-        window.load_url(f'file://{os.path.abspath("web/" + html_name)}')
+        window.load_html(requests.get(f'https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/{html_name}').text)
         if html_name == "index.html" and downloading:
             self.open_progress_bar(True)
             self.disable_button("btn_play", True)
@@ -323,11 +323,9 @@ class Api:
                     result = self.account_login(item['nickname'], item['password'])
                     if isinstance(result, list):
                         if result[3]:
-                            self.load_tab("index.html")
-                            if not self.check_minecraft_installation() or not self.check_mods_installation() or not self.check_rp_installation() or not self.check_pointblank_installation():
-                                self.change_innerHTML("btn_play", "Установить")
+                            return "index.html"
                         else:
-                            self.load_tab("link_discord_register.html")
+                            return "link_discord_register.html"
 
     def update_password(self, nickname, password, new_password):
         response = requests.post(
@@ -661,8 +659,6 @@ class Api:
             self.change_innerHTML("btn_play", "Установить")
 
 if __name__ == '__main__':
-
-    file_download()
     api = Api()
     settings = api.readJson("data/settings.json")
     minecraft_version = api.readJson(minecraft_dir + "/minecraft_version.json")
@@ -674,5 +670,7 @@ if __name__ == '__main__':
     if minecraft_version is None:
         api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
-    window = webview.create_window(title="WacoLauncher", url="web/login.html", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(api.check_login, debug=False)
+    html_name = api.check_login()
+
+    window = webview.create_window(title="WacoLauncher", html=requests.get(f'https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/{html_name}.html').text, width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
+    webview.start(debug=False)
