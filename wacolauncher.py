@@ -674,4 +674,4 @@ if __name__ == '__main__':
         api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
     window = webview.create_window(title="WacoLauncher", url="web/login.html", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(api.check_login, debug=True)
+    webview.start(api.check_login, debug=False)
