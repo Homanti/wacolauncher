@@ -88,19 +88,16 @@ def save_account(nickname, password):
     except Exception as e:
         print(f"Ошибка при обработке файла data/credentials.json: {e}, информация которая записывалась в файл {new_account_data}")
 
-def file_download(url, folder_path, what):
+def file_download(url, folder_path, what = None):
     global downloading
-    # Создаем директорию, если она не существует
     os.makedirs(folder_path, exist_ok=True)
 
     api = Api()
 
     try:
-        # Получаем ответ от сервера
         response = requests.get(url, stream=True)
         total_length = response.headers.get('content-length')
 
-        # Пытаемся получить имя файла из заголовков
         if 'Content-Disposition' in response.headers:
             filename = response.headers.get('Content-Disposition').split('filename=')[-1].strip('"')
         else:
@@ -109,7 +106,8 @@ def file_download(url, folder_path, what):
         file_path = os.path.join(folder_path, filename)
 
         if total_length is None:
-            api.progress_bar_set(0, what)
+            if what:
+                api.progress_bar_set(0, what)
         else:
             dl = 0
             total_length = int(total_length)
@@ -119,7 +117,8 @@ def file_download(url, folder_path, what):
                     dl += len(data)
                     file.write(data)
                     progress = round(dl / total_length * 100, 2)
-                    api.progress_bar_set(progress, what)
+                    if what:
+                        api.progress_bar_set(progress, what)
 
             print(f"Файл успешно загружен и сохранен в {file_path}.")
 
@@ -662,6 +661,8 @@ class Api:
             self.change_innerHTML("btn_play", "Установить")
 
 if __name__ == '__main__':
+
+    file_download()
     api = Api()
     settings = api.readJson("data/settings.json")
     minecraft_version = api.readJson(minecraft_dir + "/minecraft_version.json")
