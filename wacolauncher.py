@@ -47,7 +47,6 @@ def createFolderIfNeeded(folder_name):
         print(f"Папка {folder_name} создана")
 
 createFolderIfNeeded("data")
-createFolderIfNeeded("web/javascript")
 createFolderIfNeeded(minecraft_dir)
 
 def save_account(nickname, password):
@@ -327,6 +326,7 @@ class Api:
                             return "index.html"
                         else:
                             return "link_discord_register.html"
+        return "login.html"
 
     def update_password(self, nickname, password, new_password):
         response = requests.post(
@@ -665,12 +665,6 @@ class Api:
 
 if __name__ == '__main__':
     api = Api()
-
-    for web in api.readJson(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web.json")["web"]:
-        file_download(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/{web}", "web")
-
-    for js in api.readJson(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web.json")["javascript"]:
-        file_download(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/javascript/{js}", "web/javascript")
 
     settings = api.readJson("data/settings.json")
     minecraft_version = api.readJson(minecraft_dir + "/minecraft_version.json")
