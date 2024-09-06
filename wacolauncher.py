@@ -665,6 +665,7 @@ class Api:
 
 if __name__ == '__main__':
     api = Api()
+
     for web in api.readJson(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web.json")["web"]:
         file_download(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/{web}", "web")
 
@@ -681,7 +682,5 @@ if __name__ == '__main__':
     if minecraft_version is None:
         api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
-    html_name = api.check_login()
-
-    window = webview.create_window(title="WacoLauncher", url=f"web/{html_name}", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
+    window = webview.create_window(title="WacoLauncher", url=f"web/{api.check_login()}", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
     webview.start(api.check_install(), debug=False)
