@@ -164,11 +164,6 @@ body, html {
     background-color: #333;
 }
 
-.profile-button:disabled:hover {
-    background-color: #333;
-    box-shadow: unset;
-}
-
 /* Стили для аватара в кнопке профиля */
 .profile-avatar {
     width: 40px; /* Ширина аватара */

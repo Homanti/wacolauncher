@@ -18,6 +18,28 @@ import minecraft_launcher_lib
 appdata_path = os.path.expandvars('%APPDATA%')
 minecraft_dir = appdata_path + "/.wacorp"
 downloading = False
+launched = False
+skin_settings = {
+    "version": "14.20",
+    "buildNumber": 27,
+    "loadlist": [
+        {
+            "name": "Github",
+            "skin": "https://github.com/Homanti/wacoskins/blob/main/{USERNAME}_skin.png?raw=true"
+        }
+    ],
+    "enableDynamicSkull": True,
+    "enableTransparentSkin": False,
+    "forceLoadAllTextures": True,
+    "enableCape": True,
+    "threadPoolSize": 8,
+    "enableLogStdOut": False,
+    "cacheExpiry": 30,
+    "forceUpdateSkull": False,
+    "enableLocalProfileCache": False,
+    "enableCacheAutoClean": False,
+    "forceDisableCache": False
+}
 
 def createFolderIfNeeded(folder_name):
     if not os.path.exists(folder_name):
@@ -142,6 +164,10 @@ class Api:
         if html_name == "index.html" and downloading:
             self.open_progress_bar(True)
             self.disable_button("btn_play", True)
+
+        elif html_name == "index.html" and launched:
+            self.disable_button("btn_play", True)
+            self.change_innerHTML("btn_play", "Запущено")
 
     def readJson(self, filename):  # чтение json файлов
         if filename.startswith('https://') or filename.startswith('http://'):
@@ -403,6 +429,11 @@ class Api:
         self.disable_button("profile_button", False)
         self.disable_button("btn_settings", False)
         self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
+        api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
+
+        with open(minecraft_dir + "/options.txt", "w", encoding="utf-8") as file:
+            response = requests.get("https://pastebin.com/raw/ntDpjK0L")
+            file.write(response.text)
 
     def install_mods(self):
         global downloading
@@ -454,6 +485,12 @@ class Api:
 
         minecraft_version["mods"] = latest_list_mods
         self.writeJson(minecraft_dir + "/minecraft_version.json", minecraft_version)
+        with open(minecraft_dir + "/options.txt", "w", encoding="utf-8") as file:
+            file.write("""
+            resourcePacks:["vanilla","pointblank_resources","pfm-asset-resources","mod_resources","file/WacoRP.zip"]
+            lastServer:
+            lang:ru_ru
+            """)
 
     def install_rp(self):
         global downloading
@@ -549,6 +586,7 @@ class Api:
         return False
 
     def start_minecraft(self):
+        global launched
         if self.check_minecraft_installation() and self.check_mods_installation() and self.check_rp_installation() and self.check_pointblank_installation():
             data = self.readJson("data/credentials.json")
             settings = self.readJson("data/settings.json")
@@ -556,11 +594,23 @@ class Api:
             if data:
                 for item in data:
                     if item['active']:
+                        createFolderIfNeeded(minecraft_dir + "/CustomSkinLoader")
+                        self.writeJson(minecraft_dir + "/CustomSkinLoader/CustomSkinLoader.json", skin_settings)
                         options = {
                             "username": item['nickname'],
                             "jvmArguments": [f"-Xmx{settings["ram"]}m", f"-Xms{settings["ram"]}m"]
                         }
+
+                        launched = True
+                        self.disable_button("btn_play", True)
+                        self.change_innerHTML("btn_play", "Запущено")
+
                         subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.7", minecraft_dir, options=options))
+
+                        launched = False
+                        self.disable_button("btn_play", False)
+                        self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
+
         else:
             if not self.check_minecraft_installation():
                 self.install_minecraft()
@@ -603,8 +653,8 @@ if __name__ == '__main__':
         memory_info = psutil.virtual_memory()
         api.writeJson("data/settings.json", {"ram": (round(memory_info.total / (1024 ** 2) / 2))})
 
-    if not minecraft_version:
-        api.writeJson( "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
+    if minecraft_version is None:
+        api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
     window = webview.create_window(title="WacoLauncher", url="web/login.html", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
     webview.start(api.check_login, debug=True)
