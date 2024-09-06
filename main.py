@@ -406,6 +406,11 @@ class Api:
         document.getElementById('{element_id}').innerHTML = '{innerHTML}';
         """)
 
+    def show_info_message(self, title, text):
+        window.evaluate_js(f"""
+        show_info_modal('{title}', '{text}');
+        """)
+
     def install_minecraft(self):
         global downloading
         max_value = [0]
@@ -595,21 +600,33 @@ class Api:
                 for item in data:
                     if item['active']:
                         createFolderIfNeeded(minecraft_dir + "/CustomSkinLoader")
-                        self.writeJson(minecraft_dir + "/CustomSkinLoader/CustomSkinLoader.json", skin_settings)
-                        options = {
-                            "username": item['nickname'],
-                            "jvmArguments": [f"-Xmx{settings["ram"]}m", f"-Xms{settings["ram"]}m"]
-                        }
+                        account = self.account_login(item['nickname'], item['password'])
 
-                        launched = True
-                        self.disable_button("btn_play", True)
-                        self.change_innerHTML("btn_play", "Запущено")
+                        if isinstance(account, list):
+                            if account[7]:
+                                self.writeJson(minecraft_dir + "/CustomSkinLoader/CustomSkinLoader.json", skin_settings)
+                                options = {
+                                    "username": item['nickname'],
+                                    "jvmArguments": [f"-Xmx{settings["ram"]}m", f"-Xms{settings["ram"]}m"]
+                                }
 
-                        subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.7", minecraft_dir, options=options))
+                                launched = True
+                                self.disable_button("btn_play", True)
+                                self.change_innerHTML("btn_play", "Запущено")
 
-                        launched = False
-                        self.disable_button("btn_play", False)
-                        self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
+                                subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.7", minecraft_dir, options=options))
+
+                                launched = False
+                                self.disable_button("btn_play", False)
+                                self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
+                            else:
+                                self.show_info_message("Ошибка", "Ваша заявка еще не одобрена. Ожидайте сообщение в Discord.")
+
+                        elif account == 401:
+                            self.show_info_message("Ошибка", "Неверный логин или пароль")
+
+                        elif account == 502:
+                            self.show_info_message("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.")
 
         else:
             if not self.check_minecraft_installation():
