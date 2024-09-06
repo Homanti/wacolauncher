@@ -407,7 +407,7 @@ class Api:
     def install_mods(self):
         global downloading
 
-        minecraft_version = self.readJson(minecraft_dir + "\\minecraft_version.json")
+        minecraft_version = self.readJson(minecraft_dir + "/minecraft_version.json")
         latest_minecraft_version = self.readJson("https://raw.githubusercontent.com/Homanti/wacominecraft/main/mods.json")
 
         list_mods = minecraft_version["mods"]
@@ -453,12 +453,12 @@ class Api:
         self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
 
         minecraft_version["mods"] = latest_list_mods
-        self.writeJson(minecraft_dir + "\\minecraft_version.json", minecraft_version)
+        self.writeJson(minecraft_dir + "/minecraft_version.json", minecraft_version)
 
     def install_rp(self):
         global downloading
 
-        minecraft_version = self.readJson(minecraft_dir + "\\minecraft_version.json")
+        minecraft_version = self.readJson(minecraft_dir + "/minecraft_version.json")
         latest_minecraft_version = self.readJson("https://pastebin.com/raw/70N3V9Nj")
         latest_rp_version = latest_minecraft_version["rp_version"]
 
@@ -480,12 +480,12 @@ class Api:
         self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
 
         minecraft_version["rp_version"] = latest_rp_version
-        self.writeJson(minecraft_dir + "\\minecraft_version.json", minecraft_version)
+        self.writeJson(minecraft_dir + "/minecraft_version.json", minecraft_version)
 
     def install_pointblank(self):
         global downloading
 
-        minecraft_version = self.readJson(minecraft_dir + "\\minecraft_version.json")
+        minecraft_version = self.readJson(minecraft_dir + "/minecraft_version.json")
         latest_minecraft_version = self.readJson("https://pastebin.com/raw/70N3V9Nj")
         latest_pointblank_version = latest_minecraft_version["pointblank"]
 
@@ -512,7 +512,7 @@ class Api:
         self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
 
         minecraft_version["pointblank"] = latest_pointblank_version
-        self.writeJson(minecraft_dir + "\\minecraft_version.json", minecraft_version)
+        self.writeJson(minecraft_dir + "/minecraft_version.json", minecraft_version)
 
     def check_minecraft_installation(self):
         if os.path.exists(minecraft_dir + "/versions/1.20.1-forge-47.3.7/1.20.1-forge-47.3.7.jar"):
@@ -521,7 +521,7 @@ class Api:
             return False
 
     def check_mods_installation(self):
-        list_mods = self.readJson(minecraft_dir + "\\minecraft_version.json")["mods"]
+        list_mods = self.readJson(minecraft_dir + "/minecraft_version.json")["mods"]
         latest_list_mods = self.readJson("https://github.com/Homanti/wacominecraft/raw/main/mods.json")["mods"]
 
         if list_mods == latest_list_mods:
@@ -535,13 +535,13 @@ class Api:
         return False
 
     def check_rp_installation(self):
-        rp_version = self.readJson(minecraft_dir + "\\minecraft_version.json")["rp_version"]
+        rp_version = self.readJson(minecraft_dir + "/minecraft_version.json")["rp_version"]
         latest_minecraft_version = self.readJson("https://pastebin.com/raw/70N3V9Nj")["rp_version"]
 
         return rp_version == latest_minecraft_version and os.path.exists(minecraft_dir + "/resourcepacks/WacoRP.zip")
 
     def check_pointblank_installation(self):
-        pointblank_version = self.readJson(minecraft_dir + "\\minecraft_version.json")["rp_version"]
+        pointblank_version = self.readJson(minecraft_dir + "/minecraft_version.json")["rp_version"]
         latest_pointblank_version = self.readJson("https://pastebin.com/raw/70N3V9Nj")["rp_version"]
 
         if pointblank_version and latest_pointblank_version:
@@ -585,26 +585,26 @@ class Api:
             self.change_innerHTML("btn_play", "Установить")
 
         elif what == "mods":
-            remove_directory(minecraft_dir + "mods")
+            remove_directory(minecraft_dir + "/mods")
             self.load_tab("index.html")
             self.change_innerHTML("btn_play", "Установить")
 
         elif what == "rp":
-            remove_directory(minecraft_dir + "rp")
+            remove_file(minecraft_dir + "/resourcepacks/WacoRP.zip")
             self.load_tab("index.html")
             self.change_innerHTML("btn_play", "Установить")
 
 if __name__ == '__main__':
     api = Api()
     settings = api.readJson("data/settings.json")
-    minecraft_version = api.readJson(minecraft_dir + "\\minecraft_version.json")
+    minecraft_version = api.readJson(minecraft_dir + "/minecraft_version.json")
 
     if not settings or not settings["ram"]:
         memory_info = psutil.virtual_memory()
         api.writeJson("data/settings.json", {"ram": (round(memory_info.total / (1024 ** 2) / 2))})
 
     if not minecraft_version:
-        api.writeJson(minecraft_dir + "\\minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
+        api.writeJson( "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
     window = webview.create_window(title="WacoLauncher", url="web/login.html", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
     webview.start(api.check_login, debug=True)
