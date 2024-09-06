@@ -69,10 +69,3 @@ async function register_account() {
 registerButton.addEventListener("click", function () {
     register_account();
 });
-
-document.addEventListener('click', function (event) {
-    if (event.target.tagName === 'A' && event.target.href) {
-        event.preventDefault();
-        window.pywebview.api.open_link(event.target.href);
-    }
-});

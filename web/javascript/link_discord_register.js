@@ -25,7 +25,7 @@ async function get_account_id() {
         if (idList && idList.length > 0) {
             const firstId = idList[0]; // Берем первый элемент списка
             const discordLinkElement = document.getElementById("discord_link");
-            discordLinkElement.innerHTML = `Для продолжение регистрации напишите "/link ${firstId}" <a href="https://discord.gg/8YCNBakvpC">в этом Discord канале</a>. После нажмите на кнопку.`;
+            discordLinkElement.innerHTML = `Для продолжение регистрации напишите "/link ${firstId}" <a href="https://discord.gg/kEKgkx7Me7">в этом Discord канале</a>. После нажмите на кнопку.`;
         } else {
             console.error("Список ID пуст или не был получен.");
         }
