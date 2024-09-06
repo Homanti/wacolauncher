@@ -1,8 +1,8 @@
 import json
 import shutil
+import subprocess
 import zipfile
 from urllib.parse import urlsplit
-import webview
 import os
 import requests
 
@@ -12,7 +12,7 @@ def createFolderIfNeeded(folder_name):
         print(f"Папка {folder_name} создана")
 
 createFolderIfNeeded("data")
-createFolderIfNeeded("web/javascript")
+createFolderIfNeeded("wacolauncher/web/javascript")
 
 def file_download(url, folder_path, what = None):
     global downloading
@@ -102,47 +102,36 @@ class Api:
         except Exception as e:
             print(f"Ошибка при обработке файла {filename}: {e}, информация которая записывалась в файл {data}")
 
-    def progress_bar_set(self, percent, what):
-        window.evaluate_js(f"""
-        document.getElementById('progress_bar').style.width = '{percent}%';
-        document.getElementById('progress_text').textContent = 'Обновление {what}... {round(percent, 2)}%';
-        """)
-
-    def change_innerHTML(self, element_id, innerHTML):
-        window.evaluate_js(f"""
-        document.getElementById('{element_id}').innerHTML = '{innerHTML}';
-        """)
-
-    def show_info_message(self, title, text):
-        window.evaluate_js(f"""
-        show_info_modal('{title}', '{text}');
-        """)
-
 if __name__ == '__main__':
     api = Api()
-    window = webview.create_window(title="WacoLauncher", url="web/update.html", width=400, height=100, js_api=api, resizable=False, fullscreen=False, frameless=True)
 
     launcher_version = api.readJson("data/launcher_version.json")
+    latest_launcher_version = api.readJson("https://pastebin.com/raw/cGGax626")
 
     if launcher_version is None:
         api.writeJson("data/launcher_version.json", {"launcher_version": None, "web_version": None})
+        launcher_version = api.readJson("data/launcher_version.json")
 
-    if not os.path.exists("web") or api.readJson("https://pastebin.com/raw/cGGax626")["web_version"] != launcher_version["web_version"]:
-        remove_directory("web")
-
-        for web in api.readJson(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web.json")["web"]:
-            webview.start(debug=True)
-            file_download(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/{web}", "web", "лаунчера")
-
-        for js in api.readJson(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web.json")["javascript"]:
-            webview.start(debug=True)
-            file_download(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/javascript/{js}", "web/javascript", "лаунчера")
-
-    if not os.path.exists("wacolauncher/wacolauncher.exe") or api.readJson("https://pastebin.com/raw/cGGax626")["launcher_version"] != launcher_version["launcher_version"]:
-        webview.start(debug=True)
-
+    if not os.path.exists("wacolauncher/wacolauncher.exe") or latest_launcher_version["launcher_version"] != launcher_version["launcher_version"]:
         remove_directory("wacolauncher")
-        file_download(f"https://github.com/Homanti/wacolauncher/raw/main/build_launcher/wacolauncher.zip", "wacolauncher", "лаунчера")
+        file_download(f"https://github.com/Homanti/wacolauncher/raw/main/build_launcher/wacolauncher.zip", "wacolauncher")
 
         with zipfile.ZipFile("wacolauncher/wacolauncher.zip") as zip_ref:
             zip_ref.extractall("wacolauncher")
+
+        remove_file("wacolauncher/wacolauncher.zip")
+        launcher_version["launcher_version"] = latest_launcher_version["launcher_version"]
+
+    if not os.path.exists("wacolauncher/web") or latest_launcher_version["web_version"] != launcher_version["web_version"]:
+        remove_directory("wacolauncher/web")
+
+        for web in api.readJson(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web.json")["web"]:
+            file_download(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/{web}", "wacolauncher/web")
+
+        for js in api.readJson(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web.json")["javascript"]:
+            file_download(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/javascript/{js}", "wacolauncher/web/javascript")
+
+        launcher_version["web_version"] = latest_launcher_version["web_version"]
+
+    api.writeJson("data/launcher_version.json", launcher_version)
+    subprocess.run("wacolauncher/wacolauncher.exe")
