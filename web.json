@@ -1,0 +1,20 @@
+{
+    "web": [
+        "index.html",
+        "link_discord_register.html",
+        "login.html",
+        "register.html",
+        "settings.html",
+        "style.css",
+        "style_update.css",
+        "update.html"
+    ],
+    "javascript": [
+        "index.js",
+        "link_discord_register.js",
+        "login.js",
+        "main.js",
+        "register.js",
+        "settings.js"
+    ]
+}
