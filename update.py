@@ -153,7 +153,7 @@ class Api:
 if __name__ == '__main__':
     api = Api()
 
-    if not os.path.exists("web/update.html"):
+    if not os.path.exists("web/update.html") or not os.path.exists("web/style_update.css.html"):
         file_download(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/update.html", "web")
         file_download(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/style_update.css", "web")
 
