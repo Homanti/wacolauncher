@@ -659,10 +659,6 @@ class Api:
             self.load_tab("index.html")
             self.change_innerHTML("btn_play", "Установить")
 
-    def check_install(self):
-        if not self.check_minecraft_installation() or not self.check_mods_installation() or not self.check_rp_installation() or not self.check_pointblank_installation():
-            self.change_innerHTML("btn_play", "Установить")
-
 if __name__ == '__main__':
     api = Api()
 
@@ -677,4 +673,4 @@ if __name__ == '__main__':
         api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
     window = webview.create_window(title="WacoLauncher", url=f"web/{api.check_login()}", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(api.check_install(), debug=False)
+    webview.start(debug=False)
