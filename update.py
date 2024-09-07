@@ -4,9 +4,6 @@ import subprocess
 import zipfile
 from urllib.parse import urlsplit
 import os
-import pygetwindow as gw
-from pywinauto.application import Application
-import psutil
 import requests
 import webview
 
