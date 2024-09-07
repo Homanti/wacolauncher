@@ -5,7 +5,9 @@
         "login.html",
         "register.html",
         "settings.html",
-        "style.css"
+        "style.css",
+        "style_update.css",
+        "update.html"
     ],
     "javascript": [
         "index.js",
