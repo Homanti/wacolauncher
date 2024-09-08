@@ -1,0 +1,6 @@
+aiohttp
+psutil
+pywebview
+requests
+pillow
+minecraft-launcher-lib

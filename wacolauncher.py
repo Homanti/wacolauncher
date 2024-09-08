@@ -366,7 +366,7 @@ class Api:
     def progress_bar_set(self, percent, what):
         window.evaluate_js(f"""
         document.getElementById('progress_bar').style.width = '{percent}%';
-        document.getElementById('progress_text').textContent = 'Установка {what}... {round(percent, 2)}%';
+        document.getElementById('progress_text').textContent = 'Установка ' + {json.dumps(what)} + '... {round(percent, 2)}%';
         """)
 
     def open_progress_bar(self, status):
@@ -488,12 +488,6 @@ class Api:
 
         minecraft_version["mods"] = latest_list_mods
         self.writeJson(minecraft_dir + "/minecraft_version.json", minecraft_version)
-        with open(minecraft_dir + "/options.txt", "w", encoding="utf-8") as file:
-            file.write("""
-            resourcePacks:["vanilla","pointblank_resources","pfm-asset-resources","mod_resources","file/WacoRP.zip"]
-            lastServer:
-            lang:ru_ru
-            """)
 
     def install_rp(self):
         global downloading
@@ -611,7 +605,6 @@ class Api:
                                 launched = True
                                 self.disable_button("btn_play", True)
                                 self.change_innerHTML("btn_play", "Запущено")
-
                                 subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.7", minecraft_dir, options=options))
 
                                 launched = False

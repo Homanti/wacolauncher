@@ -108,7 +108,7 @@ class Api:
     def progress_bar_set(self, percent, what):
         window.evaluate_js(f"""
         document.getElementById('progress_bar').style.width = '{percent}%';
-        document.getElementById('progress_text').textContent = 'Обновление {what}... {round(percent, 2)}%';
+        document.getElementById('progress_text').textContent = 'Обновление ' + {json.dumps(what)} + '... {round(percent, 2)}%';
         """)
 
     def update_launcher(self):
