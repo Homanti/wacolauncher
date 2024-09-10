@@ -383,19 +383,7 @@ class Api:
                 "setMax": lambda value: max_value.__setitem__(0, value)
             }
 
-            original_popen = subprocess.Popen
-
-            def patched_popen(*args, **kwargs):
-                if ctypes.windll.kernel32.GetConsoleWindow():
-                    kwargs['creationflags'] = subprocess.CREATE_NO_WINDOW
-                return original_popen(*args, **kwargs)
-
-            subprocess.Popen = patched_popen
-
-            try:
-                minecraft_launcher_lib.forge.install_forge_version("1.20.1-47.3.7", minecraft_dir, callback=callback)
-            finally:
-                subprocess.Popen = original_popen
+            minecraft_launcher_lib.forge.install_forge_version("1.20.1-47.3.7", minecraft_dir, callback=callback)
 
             downloading = False
 
