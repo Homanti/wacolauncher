@@ -1,3 +1,4 @@
+import ctypes
 import json
 import shutil
 import subprocess
@@ -22,7 +23,10 @@ skin_settings = {
     "loadlist": [
         {
             "name": "Github",
-            "skin": "https://github.com/Homanti/wacoskins/blob/main/{USERNAME}_skin.png?raw=true"
+            "type": "Legacy",
+            "checkPNG": False,
+            "skin": "https://raw.githubusercontent.com/Homanti/wacoskins/main/{USERNAME}_skin.png",
+            "model": "auto"
         }
     ],
     "enableDynamicSkull": True,
@@ -379,13 +383,19 @@ class Api:
                 "setMax": lambda value: max_value.__setitem__(0, value)
             }
 
-            with open(os.devnull, 'w') as fnull:
-                sys.stdout = fnull
-                sys.stderr = fnull
-            minecraft_launcher_lib.forge.install_forge_version("1.20.1-47.3.7", minecraft_dir, callback=callback)
+            original_popen = subprocess.Popen
 
-            sys.stdout = sys.__stdout__
-            sys.stderr = sys.__stderr__
+            def patched_popen(*args, **kwargs):
+                if ctypes.windll.kernel32.GetConsoleWindow():
+                    kwargs['creationflags'] = subprocess.CREATE_NO_WINDOW
+                return original_popen(*args, **kwargs)
+
+            subprocess.Popen = patched_popen
+
+            try:
+                minecraft_launcher_lib.forge.install_forge_version("1.20.1-47.3.7", minecraft_dir, callback=callback)
+            finally:
+                subprocess.Popen = original_popen
 
             downloading = False
 
@@ -563,7 +573,7 @@ class Api:
                 if account["result"][7]:
                     self.writeJson(minecraft_dir + "/CustomSkinLoader/CustomSkinLoader.json", skin_settings)
                     options = {
-                        "username": account['nickname'],
+                        "username": account["result"][1],
                         "jvmArguments": [f"-Xmx{settings["ram"]}m", f"-Xms{settings["ram"]}m"]
                     }
 

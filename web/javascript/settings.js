@@ -45,24 +45,25 @@ window.addEventListener('pywebviewready', async function() {
 
 document.getElementById("button_upload_skin").addEventListener("click", async function() {
     try {
-        const activeAccount = window.pywebview.api.get_active_account();
-        const skinFile = skin.files[0];
+        const active_account = window.pywebview.api.get_active_account();
+        if (active_account.status_code === 200) {
+            const skinFile = skin.files[0];
 
-        const result = await window.pywebview.api.start_upload_skin(
-            activeAccount["nickname"],
-            activeAccount["password"],
-            skinFile
-        );
+            const result = await window.pywebview.api.start_upload_skin(
+                active_account.result[1],
+                active_account.result[2],
+                skinFile
+            );
 
-        if (result === true) {
-            show_info_modal("Успешно", "Скин успешно изменен")
+            if (result === true) {
+                show_info_modal("Успешно", "Скин успешно изменен")
+            }
+            else if (result === 401) {
+                open_tab("login.html");
+            } else {
+                show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
+            }
         }
-        else if (result === 401) {
-            open_tab("login.html");
-        } else {
-            show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
-        }
-
     } catch (error) {
         show_info_modal("Ошибка", "Произошла ошибка при смене скина. Пожалуйста, попробуйте еще раз.");
         console.error(error);
@@ -74,7 +75,7 @@ document.getElementById("button_update_password").addEventListener("click", asyn
     const new_password = document.getElementById("input_new_password").value;
 
     const active_account = await window.pywebview.api.get_active_account();
-    const result = await window.pywebview.api.update_password(active_account["nickname"], old_password, new_password);
+    const result = await window.pywebview.api.update_password(active_account.result[1], old_password, new_password);
 
     if (result.status_code === 200) {
         show_info_modal("Успешно", "Пароль успешно изменен")
@@ -89,7 +90,7 @@ document.getElementById("button_delete_account").addEventListener("click", async
     const password = document.getElementById("input_password").value;
     const active_account = await window.pywebview.api.get_active_account();
 
-    const result = await window.pywebview.api.delete_account(active_account["nickname"], password);
+    const result = await window.pywebview.api.delete_account(active_account.result[1], password);
 
     if (result.status_code === 200) {
         show_info_modal("Успешно", "Аккаунт успешно удален")

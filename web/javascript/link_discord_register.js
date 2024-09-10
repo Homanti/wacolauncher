@@ -21,6 +21,10 @@ async function check_discord_link() {
 async function get_account_id() {
     const account = await window.pywebview.api.get_active_account();
 
-    const discordLinkElement = document.getElementById("discord_link");
-    discordLinkElement.innerHTML = `Для продолжения регистрации напишите "/link ${account.result[0]}" <a href="https://discord.gg/kEKgkx7Me7">в этом Discord канале</a>. После нажмите на кнопку.`;
+    if (active_account.status_code === 200) {
+        const discordLinkElement = document.getElementById("discord_link");
+        discordLinkElement.innerHTML = `Для продолжения регистрации напишите "/link ${account.result[0]}" <a href="https://discord.gg/kEKgkx7Me7">в этом Discord канале</a>. После нажмите на кнопку.`;
+    } else {
+        show_info_modal("Ошибка", "Неверный логин или пароль")
+    }
 }
