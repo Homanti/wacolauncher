@@ -44,11 +44,11 @@
     <div class="profile-dropdown">
 
         <div class="profile-button" id="profile_button" onclick="toggleDropdown()">
-            <img src="https://placehold.co/50x50" alt="Avatar" class="profile-avatar" id="currentAvatar"> <!-- Аватар текущего профиля -->
+            <canvas id="currentAvatarCanvas" width="40" height="40" class="profile-avatar"></canvas>
             <div class="profile-details">
-                <div class="profile-name" id="currentProfileName">Nickname</div> <!-- Имя текущего профиля -->
+                <div class="profile-name" id="currentProfileName"></div>
             </div>
-            <div class="dropdown-icon">▼</div> <!-- Иконка раскрытия меню -->
+            <div class="dropdown-icon">▼</div>
         </div>
 
         <div class="dropdown-menu" id="dropdownMenu">

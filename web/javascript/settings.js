@@ -43,41 +43,25 @@ window.addEventListener('pywebviewready', async function() {
     document.getElementById("ram_range").value = ram;
 });
 
-
 document.getElementById("button_upload_skin").addEventListener("click", async function() {
     try {
-        const file = skin.files[0];
-        const fileReader = new FileReader();
-        const accounts = await get_accounts(); // Ожидаем асинхронный вызов
+        const activeAccount = window.pywebview.api.get_active_account();
+        const skinFile = skin.files[0];
 
-        let activeAccount = null;
+        const result = await window.pywebview.api.start_upload_skin(
+            activeAccount["nickname"],
+            activeAccount["password"],
+            skinFile
+        );
 
-        for (let i = 0; i < accounts.length; i++) {
-            if (accounts[i]["active"]) { // Проверяем каждый элемент массива accounts
-                activeAccount = accounts[i];
-                break;
-            }
+        if (result === true) {
+            show_info_modal("Успешно", "Скин успешно изменен")
         }
-
-        fileReader.onload = async function(event) {
-            const fileBytes = new Uint8Array(event.target.result);
-            const result = await window.pywebview.api.start_upload_skin(
-                activeAccount["nickname"],
-                activeAccount["password"],
-                fileBytes
-            );
-
-            if (result === true) {
-                show_info_modal("Успешно", "Скин успешно изменен")
-            }
-            else if (result === 401) {
-                open_tab("login.html");
-            } else {
-                show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
-            }
-        };
-
-        fileReader.readAsArrayBuffer(file);
+        else if (result === 401) {
+            open_tab("login.html");
+        } else {
+            show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
+        }
 
     } catch (error) {
         show_info_modal("Ошибка", "Произошла ошибка при смене скина. Пожалуйста, попробуйте еще раз.");
@@ -86,24 +70,15 @@ document.getElementById("button_upload_skin").addEventListener("click", async fu
 });
 
 document.getElementById("button_update_password").addEventListener("click", async function() {
-    const accounts = await get_accounts();
     const old_password = document.getElementById("input_old_password").value;
     const new_password = document.getElementById("input_new_password").value;
 
-    let activeAccount = null;
+    const active_account = await window.pywebview.api.get_active_account();
+    const result = await window.pywebview.api.update_password(active_account["nickname"], old_password, new_password);
 
-    for (let i = 0; i < accounts.length; i++) {
-        if (accounts[i]["active"]) {
-            activeAccount = accounts[i];
-            break;
-        }
-    }
-
-    const result = await window.pywebview.api.update_password(activeAccount["nickname"], old_password, new_password);
-
-    if (result === 200) {
+    if (result.status_code === 200) {
         show_info_modal("Успешно", "Пароль успешно изменен")
-    } else if (result === 401) {
+    } else if (result.status_code === 401) {
         show_info_modal("Ошибка", "Неверный пароль")
     } else {
         show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
@@ -111,23 +86,14 @@ document.getElementById("button_update_password").addEventListener("click", asyn
 })
 
 document.getElementById("button_delete_account").addEventListener("click", async function() {
-    const accounts = await get_accounts();
     const password = document.getElementById("input_password").value;
+    const active_account = await window.pywebview.api.get_active_account();
 
-    let activeAccount = null;
+    const result = await window.pywebview.api.delete_account(active_account["nickname"], password);
 
-    for (let i = 0; i < accounts.length; i++) {
-        if (accounts[i]["active"]) {
-            activeAccount = accounts[i];
-            break;
-        }
-    }
-
-    const result = await window.pywebview.api.delete_account(activeAccount["nickname"], password);
-
-    if (result === 200) {
+    if (result.status_code === 200) {
         show_info_modal("Успешно", "Аккаунт успешно удален")
-    } else if (result === 401) {
+    } else if (result.status_code === 401) {
         show_info_modal("Ошибка", "Неверный пароль")
     } else {
         show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
@@ -153,4 +119,3 @@ document.getElementById("ram_input").addEventListener("blur", async function() {
     settings_json["ram"] = document.getElementById("ram_input").value;
     await window.pywebview.api.writeJson("data/settings.json", settings_json);
 });
-

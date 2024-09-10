@@ -3,16 +3,15 @@ window.addEventListener('pywebviewready', function() {
 });
 
 async function check_discord_link() {
-    const result = await window.pywebview.api.check_discord_link();
+    const result = await window.pywebview.api.get_active_account();
 
-    if (Array.isArray(result)) {
-        if (result[3]) {
+    if (result.status_code === 200) {
+        if (result.result[3]) {
             open_tab("index.html")
         }
     } else {
-        if (result === 401) {
+        if (result.status_code === 401) {
             open_tab("login.html")
-            show_info_modal("Ошибка", "Неверный логин или пароль.");
         } else {
             show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
         }
@@ -20,16 +19,8 @@ async function check_discord_link() {
 }
 
 async function get_account_id() {
-    try {
-        const idList = await window.pywebview.api.get_account_id(); // Получаем список ID
-        if (idList && idList.length > 0) {
-            const firstId = idList[0]; // Берем первый элемент списка
-            const discordLinkElement = document.getElementById("discord_link");
-            discordLinkElement.innerHTML = `Для продолжение регистрации напишите "/link ${firstId}" <a href="https://discord.gg/kEKgkx7Me7">в этом Discord канале</a>. После нажмите на кнопку.`;
-        } else {
-            console.error("Список ID пуст или не был получен.");
-        }
-    } catch (error) {
-        console.error("Ошибка при получении ID:", error);
-    }
+    const account = await window.pywebview.api.get_active_account();
+
+    const discordLinkElement = document.getElementById("discord_link");
+    discordLinkElement.innerHTML = `Для продолжения регистрации напишите "/link ${account.result[0]}" <a href="https://discord.gg/kEKgkx7Me7">в этом Discord канале</a>. После нажмите на кнопку.`;
 }

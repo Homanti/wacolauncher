@@ -16,7 +16,6 @@ document.addEventListener('DOMContentLoaded', function () {
         registerButton.disabled = !isFormValid;
     }
 
-    // Привязываем событие 'input' ко всем полям для проверки формы в реальном времени
     nickname.addEventListener('input', validateForm);
     password.addEventListener('input', validateForm);
     history.addEventListener('input', validateForm);
@@ -24,41 +23,41 @@ document.addEventListener('DOMContentLoaded', function () {
     skin.addEventListener('input', validateForm);
     rulesCheckbox.addEventListener('change', validateForm);
 
-    // Начальная проверка формы
     validateForm();
 });
 
 async function register_account() {
     try {
-        const file = skin.files[0];
-        const fileReader = new FileReader();
+        const skinFile = skin.files[0];
 
-        fileReader.onload = async function(event) {
-            const fileBytes = new Uint8Array(event.target.result);
+        const reader = new FileReader();
+        reader.readAsArrayBuffer(skinFile);
+        reader.onloadend = async function () {
+            const skinBytes = Array.from(new Uint8Array(reader.result));
             const result = await window.pywebview.api.account_register(
                 nickname.value,
                 password.value,
                 history.value,
                 how_did_you_find.value,
-                fileBytes
+                skinBytes
             );
 
-            if (Array.isArray(result)) {
-                if (result[3]) {
+            if (result.status_code === 200) {
+                if (result.result[3]) {
                     open_tab("index.html");
                 } else {
                     open_tab("link_discord_register.html");
                 }
+
             } else {
-                if (result === 401) {
+                if (result.status_code === 401) {
                     show_info_modal("Ошибка", "Неверный логин или пароль.");
+
                 } else {
                     show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
                 }
             }
         };
-
-        fileReader.readAsArrayBuffer(file);
 
     } catch (error) {
         show_info_modal("Ошибка", "Произошла ошибка при регистрации. Пожалуйста, попробуйте еще раз.");

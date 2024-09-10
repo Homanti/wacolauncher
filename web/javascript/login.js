@@ -4,14 +4,11 @@ const loginButton = document.getElementById('btn_login');
 
 document.addEventListener('DOMContentLoaded', function () {
     function validateForm() {
-        // Проверяем, заполнены ли все поля и отмечен ли чекбокс
         const isFormValid = nickname.value.trim() !== '' &&
                             password.value.trim() !== '';
-        // Включаем или отключаем кнопку в зависимости от состояния формы
         loginButton.disabled = !isFormValid;
     }
 
-    // Привязываем событие 'input' ко всем полям для проверки формы в реальном времени
     nickname.addEventListener('input', validateForm);
     password.addEventListener('input', validateForm);
 
@@ -19,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 
 window.addEventListener('pywebviewready', async function() {
-    const accounts = await get_accounts();
+    const accounts = await window.pywebview.api.readJson("data/credentials.json");
 
     if (accounts.length > 0) {
         document.getElementById("header").style.display = 'block';
@@ -29,21 +26,17 @@ window.addEventListener('pywebviewready', async function() {
 });
 
 
-async function get_accounts() {
-    return await window.pywebview.api.get_accounts();
-}
-
 async function login_account() {
     const result = await window.pywebview.api.account_login(nickname.value, password.value);
 
-    if (Array.isArray(result)) {
-        if (result[3]) {
+    if (result.status_code === 200) {
+        if (result.result[3]) {
             open_tab("index.html")
         } else {
             open_tab("link_discord_register.html")
         }
     } else {
-        if (result === 401) {
+        if (result.status_code === 401) {
             show_info_modal("Ошибка", "Неверный логин или пароль.");
         } else {
             show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");

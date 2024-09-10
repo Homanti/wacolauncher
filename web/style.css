@@ -133,6 +133,7 @@ body, html {
     position: absolute; /* Абсолютное позиционирование */
     width: 230px; /* Ширина кнопки */
     height: 60px; /* Высота кнопки */
+    margin-left: 5px;
 }
 
 /* Кнопка для профиля */
@@ -203,11 +204,13 @@ body, html {
     background-color: #444; /* Цвет фона */
     bottom: 100%; /* Позиционируем меню над кнопкой */
     margin-bottom: 5px; /* Отступ снизу */
+    margin-left: -1px;
     border-radius: 5px; /* Скругление углов */
     padding: 10px; /* Внутренние отступы */
-    width: 220px; /* Ширина меню */
+    width: 232px; /* Ширина меню */
     box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2); /* Тень для меню */
     z-index: 1; /* Повышаем приоритет по оси z */
+
 }
 
 /* Кнопка внутри выпадающего меню */
@@ -219,11 +222,6 @@ body, html {
 /* Последняя кнопка в меню */
 .dropdown-menu .profile-button:last-child {
     margin-bottom: 0; /* Убираем нижний отступ */
-}
-
-/* Кнопка "Выйти" в выпадающем меню */
-.logout-button {
-    background-color: #c0392b; /* Красный фон для кнопки выхода */
 }
 
 /* Стили для кнопки "Играть" */

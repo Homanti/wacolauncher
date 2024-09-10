@@ -1,56 +1,84 @@
-// Функция для переключения отображения дропдауна
+// Функция для обработки и изменения размера изображения (аналог Python-кода)
+function processMinecraftSkin(imageSrc, canvas, width, height) {
+    var image = new Image();
+    image.src = imageSrc;
+
+    image.onload = function() {
+        // Определяем размеры головы (x, y, width, height)
+        var headX = 8;
+        var headY = 8;
+        var headWidth = 8;
+        var headHeight = 8;
+
+        var context = canvas.getContext('2d');
+        canvas.width = width;
+        canvas.height = height;
+
+        context.imageSmoothingEnabled = false; // Чтобы избежать размытия
+        context.clearRect(0, 0, canvas.width, canvas.height);
+        context.drawImage(image, headX, headY, headWidth, headHeight, 0, 0, width, height);
+    };
+}
+
+// Функция для переключения дропдауна
 function toggleDropdown() {
-    get_accounts()
+    update_dropdown();
     var dropdownMenu = document.getElementById("dropdownMenu");
     dropdownMenu.style.display = dropdownMenu.style.display === "block" ? "none" : "block";
 }
 
 // Функция для переключения аккаунтов
-async function switchAccount(name, password, avatar) {
+async function switchAccount(name, password) {
     const result = await window.pywebview.api.account_login(name, password);
 
-    if (!Array.isArray(result)) {
-        if (result === 401) {
-            show_info_modal("Ошибка", "Неверный логин или пароль.");
-            if (!get_accounts()) {
-                open_tab("login.html")
-            }
+    if (result.status_code === 401) {
+        show_info_modal("Ошибка", "Неверный логин или пароль.");
+        const accounts = await window.pywebview.api.readJson("data/credentials.json");
+
+        if (accounts.length <= 0) {
+            open_tab("login.html", "Ошибка", "Неверный логин или пароль.");
         } else {
-            show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
+            const active_account = await window.pywebview.api.get_active_account();
+            switchAccount(active_account.nickname, active_account.password);
         }
     }
-    document.getElementById("currentProfileName").textContent = name; // Изменяем имя профиля
-    document.getElementById("currentAvatar").src = avatar; // Изменяем аватар
-    toggleDropdown(); // Закрываем дропдаун после выбора
+
+    document.getElementById("currentProfileName").textContent = name;
+
+    var currentAvatarCanvas = document.getElementById("currentAvatarCanvas");
+    processMinecraftSkin(`https://raw.githubusercontent.com/Homanti/wacoskins/main/${name}_skin.png`, currentAvatarCanvas, 50, 50);
+
+    toggleDropdown();
 }
 
 window.addEventListener('pywebviewready', function() {
-    get_accounts();
+    update_dropdown();
 });
 
-async function get_accounts() {
-    const accounts = await window.pywebview.api.get_accounts();
+// Функция для обновления дропдауна с аккаунтами
+async function update_dropdown() {
+    const accounts = await window.pywebview.api.readJson("data/credentials.json");
     updateDropdown(accounts);
 }
 
-// Функция для обновления дропдауна с аккаунтами
+// Функция для обновления содержимого дропдауна
 function updateDropdown(accounts) {
     var dropdownMenu = document.getElementById("dropdownMenu");
-    dropdownMenu.innerHTML = ''; // Очищаем текущее содержимое
+    dropdownMenu.innerHTML = '';
 
     accounts.forEach(function(account) {
-        // Создаем элемент для каждого аккаунта
         var accountButton = document.createElement('button');
         accountButton.className = 'profile-button';
         accountButton.onclick = function() {
-            switchAccount(account.nickname, account.password, `https://github.com/Homanti/wacoskins/blob/main/${account.nickname}_head.png?raw=true`); // Используйте актуальные URL для аватаров
+            switchAccount(account.nickname, account.password);
         };
 
-        // Создаем аватар и имя профиля
-        var avatar = document.createElement('img');
-        avatar.src = `https://github.com/Homanti/wacoskins/blob/main/${account.nickname}_head.png?raw=true`; // Используйте актуальные URL для аватаров
-        avatar.alt = 'Avatar';
-        avatar.className = 'profile-avatar';
+        var avatarCanvas = document.createElement('canvas');
+        avatarCanvas.width = 40;
+        avatarCanvas.height = 40;
+        avatarCanvas.className = 'profile-avatar';
+
+        processMinecraftSkin(`https://raw.githubusercontent.com/Homanti/wacoskins/main/${account.nickname}_skin.png`, avatarCanvas, 40, 40);
 
         var profileDetails = document.createElement('div');
         profileDetails.className = 'profile-details';
@@ -60,23 +88,23 @@ function updateDropdown(accounts) {
         profileName.textContent = account.nickname;
 
         profileDetails.appendChild(profileName);
-        accountButton.appendChild(avatar);
+        accountButton.appendChild(avatarCanvas);
         accountButton.appendChild(profileDetails);
 
-        // Если аккаунт активен, обновляем текущий профиль
         if (account.active) {
             document.getElementById("currentProfileName").textContent = account.nickname;
-            document.getElementById("currentAvatar").src = `https://github.com/Homanti/wacoskins/blob/main/${account.nickname}_head.png?raw=true`; // Используйте актуальные URL для аватаров
+
+            var currentAvatarCanvas = document.getElementById("currentAvatarCanvas");
+            processMinecraftSkin(`https://raw.githubusercontent.com/Homanti/wacoskins/main/${account.nickname}_skin.png`, currentAvatarCanvas, 50, 50);
         }
 
         dropdownMenu.appendChild(accountButton);
     });
 
-    // Добавляем кнопку "Добавить аккаунт"
     var addButton = document.createElement('button');
     addButton.className = 'profile-button';
     addButton.onclick = function() {
-        window.pywebview.api.load_tab("login.html")
+        open_tab("login.html");
     };
 
     var addProfileDetails = document.createElement('div');
@@ -92,7 +120,6 @@ function updateDropdown(accounts) {
     dropdownMenu.appendChild(addButton);
 }
 
-// Закрываем дропдаун при клике вне его области
 window.onclick = function(event) {
     if (!event.target.closest('.profile-dropdown')) {
         var dropdowns = document.getElementsByClassName("dropdown-menu");
@@ -106,5 +133,5 @@ window.onclick = function(event) {
 }
 
 document.getElementById('btn_play').addEventListener('click', async function () {
-    window.pywebview.api.start_minecraft()
+    window.pywebview.api.start_minecraft();
 });

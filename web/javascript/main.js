@@ -1,5 +1,5 @@
-function open_tab(html_name) {
-    window.pywebview.api.load_tab(html_name)
+function open_tab(html_name, info_message_title = null, info_message_text = null) {
+    window.pywebview.api.load_tab(html_name, info_message_title, info_message_text);
 }
 
 function show_info_modal(title, message) {
