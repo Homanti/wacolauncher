@@ -27,10 +27,6 @@ document.getElementById("type-change-skin").addEventListener("input", function()
     }
 });
 
-async function get_accounts() {
-    return await window.pywebview.api.get_accounts();
-}
-
 window.addEventListener('pywebviewready', async function() {
     const max_ram = await window.pywebview.api.get_max_ram();
     const data = await window.pywebview.api.readJson("data/settings.json");
@@ -43,26 +39,31 @@ window.addEventListener('pywebviewready', async function() {
     document.getElementById("ram_range").value = ram;
 });
 
-document.getElementById("button_upload_skin").addEventListener("click", async function() {
+document.getElementById("button_update_skin").addEventListener("click", async function() {
     try {
-        const active_account = window.pywebview.api.get_active_account();
-        if (active_account.status_code === 200) {
-            const skinFile = skin.files[0];
+        const active_account = await window.pywebview.api.get_active_account();
+        const skinFile = skin.files[0];
 
-            const result = await window.pywebview.api.start_upload_skin(
-                active_account.result[1],
-                active_account.result[2],
-                skinFile
-            );
+        if (active_account.status_code === 200){
+            const reader = new FileReader();
 
-            if (result === true) {
-                show_info_modal("Успешно", "Скин успешно изменен")
+            reader.readAsArrayBuffer(skinFile);
+            reader.onloadend = async function () {
+                const skinBytes = Array.from(new Uint8Array(reader.result));
+                const result = await window.pywebview.api.update_skin(
+                    active_account.result[1],
+                    active_account.result[2],
+                    skinBytes
+                );
+
+                if (result === true) {
+                    show_info_modal("Успешно", "Скин успешно изменен")
+                } else {
+                    show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
+                }
             }
-            else if (result === 401) {
-                open_tab("login.html");
-            } else {
-                show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
-            }
+        } else {
+            show_info_modal("Ошибка", "Неверный логин или пароль");
         }
     } catch (error) {
         show_info_modal("Ошибка", "Произошла ошибка при смене скина. Пожалуйста, попробуйте еще раз.");

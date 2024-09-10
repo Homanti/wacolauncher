@@ -1,8 +1,6 @@
-import ctypes
 import json
 import shutil
 import subprocess
-import sys
 import webbrowser
 import zipfile
 import io
@@ -244,21 +242,22 @@ class Api:
             print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
             return 502
 
-    def upload_skin(self, nickname, password, skin_png):
+    def update_skin(self, nickname, password, skin_bytes):
+        skin_file = io.BytesIO(bytes(skin_bytes))
+        skin_file.name = f'{nickname}_skin.png'
+
         response = requests.post(
-            "https://wacodb-production.up.railway.app/database/",
+            "https://wacodb-production.up.railway.app/database/update_skin",
             params={
-                "action": "register",
                 "nickname": nickname,
                 "password": password,
             },
-            files={'skin_png': ('skin.png', skin_png, 'image/png')}
+            files={'skin_png': (skin_file.name, skin_file, 'image/png')}
         )
-
         if response.status_code == 200:
             return True
         else:
-            print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
+            print(f"Update skin failed: {response.json().get('detail', 'Unknown error')}")
             return False
 
     def open_link(self, url):
