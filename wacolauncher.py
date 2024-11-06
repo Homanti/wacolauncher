@@ -238,9 +238,11 @@ class Api:
 
         if response.status_code == 200:
             return self.account_login(nickname, password)
+        elif response.status_code == 409:
+            return {"status_code": 409}
         else:
             print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
-            return 502
+            return {"status_code": 401}
 
     def update_skin(self, nickname, password, skin_bytes):
         skin_file = io.BytesIO(bytes(skin_bytes))
@@ -268,7 +270,9 @@ class Api:
         if data:
             for item in data:
                 if item['active']:
-                    return self.account_login(item['nickname'], item['password'])
+                    test = self.account_login(item['nickname'], item['password'])
+                    print(test)
+                    return test
 
     def check_login(self):
         data = self.readJson("data/credentials.json")
@@ -628,4 +632,4 @@ if __name__ == '__main__':
         api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
     window = webview.create_window(title="WacoLauncher", url=f"web/{api.check_login()}", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(debug=False)
+    webview.start(debug=True)

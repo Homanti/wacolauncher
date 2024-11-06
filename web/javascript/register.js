@@ -50,10 +50,13 @@ async function register_account() {
                 }
 
             } else {
-                if (result.status_code === 401) {
+                if (result.status_code == 401) {
                     show_info_modal("Ошибка", "Неверный логин или пароль.");
-
-                } else {
+                }
+                if (result.status_code == 409) {
+                    show_info_modal("Ошибка", "Аккаунт с таким ником уже существует")
+                }
+                else {
                     show_info_modal("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.");
                 }
             }
