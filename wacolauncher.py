@@ -235,7 +235,6 @@ class Api:
             },
             files={'skin_png': (skin_file.name, skin_file, 'image/png')}
         )
-
         if response.status_code == 200:
             return self.account_login(nickname, password)
         elif response.status_code == 409:
