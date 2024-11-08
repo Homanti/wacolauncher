@@ -2,8 +2,8 @@ import json
 import shutil
 import subprocess
 import zipfile
-from urllib.parse import urlsplit
 import os
+from urllib.parse import urlsplit
 import requests
 import webview
 
