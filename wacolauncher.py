@@ -159,7 +159,7 @@ def remove_directory(dirpath):
 
 class Api:
     def load_tab(self, html_name, info_message_title = None, info_message_text = None):
-        window.load_url(f"web/{html_name}")
+        window.load_url(f"https://wacolauncher-web-production.up.railway.app/{html_name}")
         if html_name == "index" and downloading:
             self.open_progress_bar(True)
             self.disable_button("btn_play", True)
@@ -630,5 +630,5 @@ if __name__ == '__main__':
     if minecraft_version is None:
         api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
-    window = webview.create_window(title="WacoLauncher", url=f"web/{api.check_login()}", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(debug=False)
+    window = webview.create_window(title="WacoLauncher", url=f"https://wacolauncher-web-production.up.railway.app/{api.check_login()}", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
+    webview.start(debug=True)
