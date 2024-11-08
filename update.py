@@ -43,7 +43,7 @@ def file_download(url, folder_path, what = None):
                     downloading = True
                     dl += len(data)
                     file.write(data)
-                    progress = min(round(dl / total_length * 100, 2), 100)
+                    progress =  round(dl / total_length * 100, 2)
 
                     if what:
                         api.progress_bar_set(progress, what)
@@ -115,7 +115,7 @@ class Api:
         latest_launcher_version = api.readJson("https://pastebin.com/raw/cGGax626")
 
         if launcher_version is None:
-            api.writeJson("data/launcher_version.json", {"launcher_version": None, "web_version": None})
+            api.writeJson("data/launcher_version.json", {"launcher_version": None})
             launcher_version = api.readJson("data/launcher_version.json")
 
         if not os.path.exists("wacolauncher/wacolauncher.exe") or latest_launcher_version["launcher_version"] != launcher_version["launcher_version"]:
