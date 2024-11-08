@@ -269,9 +269,7 @@ class Api:
         if data:
             for item in data:
                 if item['active']:
-                    test = self.account_login(item['nickname'], item['password'])
-                    print(test)
-                    return test
+                    return self.account_login(item['nickname'], item['password'])
 
     def check_login(self):
         data = self.readJson("data/credentials.json")

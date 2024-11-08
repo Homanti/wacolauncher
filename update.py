@@ -140,5 +140,5 @@ class Api:
 if __name__ == '__main__':
     api = Api()
 
-    window = webview.create_window(title="WacoLauncher", width=400, url="web/update.html", height=100, js_api=api, resizable=False, fullscreen=False, frameless=True, hidden=True)
+    window = webview.create_window(title="WacoLauncher", width=400, url="https://wacolauncher-web-production.up.railway.app/update", height=100, js_api=api, resizable=False, fullscreen=False, frameless=True, hidden=True)
     webview.start(api.update_launcher, debug=False)
