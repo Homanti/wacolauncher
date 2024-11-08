@@ -13,7 +13,6 @@ def createFolderIfNeeded(folder_name):
         print(f"Папка {folder_name} создана")
 
 createFolderIfNeeded("data")
-createFolderIfNeeded("wacolauncher/web/javascript")
 
 def file_download(url, folder_path, what = None):
     global downloading
@@ -131,18 +130,6 @@ class Api:
             remove_file("wacolauncher/wacolauncher.zip")
             launcher_version["launcher_version"] = latest_launcher_version["launcher_version"]
 
-        if not os.path.exists("wacolauncher/web/index.html") or latest_launcher_version["web_version"] != launcher_version["web_version"]:
-            window.show()
-            remove_directory("wacolauncher/web")
-
-            for web in api.readJson(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web.json")["web"]:
-                file_download(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/{web}", "wacolauncher/web", "лаунчера")
-
-            for js in api.readJson(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web.json")["javascript"]:
-                file_download(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/javascript/{js}", "wacolauncher/web/javascript", "лаунчера")
-
-            launcher_version["web_version"] = latest_launcher_version["web_version"]
-
         window.hide()
         api.writeJson("data/launcher_version.json", launcher_version)
 
@@ -152,10 +139,6 @@ class Api:
 
 if __name__ == '__main__':
     api = Api()
-
-    if not os.path.exists("web/update.html") or not os.path.exists("web/style_update.css.html"):
-        file_download(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/update.html", "web")
-        file_download(f"https://raw.githubusercontent.com/Homanti/wacolauncher/main/web/style_update.css", "web")
 
     window = webview.create_window(title="WacoLauncher", width=400, url="web/update.html", height=100, js_api=api, resizable=False, fullscreen=False, frameless=True, hidden=True)
     webview.start(api.update_launcher, debug=False)
