@@ -1,6 +1,11 @@
-aiohttp
+json
+shutil
+subprocess
+webbrowser
+zipfile
+io
+urllib3
 psutil
 pywebview
 requests
-pillow
 minecraft-launcher-lib
