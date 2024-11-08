@@ -160,11 +160,11 @@ def remove_directory(dirpath):
 class Api:
     def load_tab(self, html_name, info_message_title = None, info_message_text = None):
         window.load_url(f"web/{html_name}")
-        if html_name == "index.html" and downloading:
+        if html_name == "index" and downloading:
             self.open_progress_bar(True)
             self.disable_button("btn_play", True)
 
-        elif html_name == "index.html" and launched:
+        elif html_name == "index" and launched:
             self.disable_button("btn_play", True)
             self.change_innerHTML("btn_play", "Запущено")
 
@@ -282,10 +282,10 @@ class Api:
 
                     if result["status_code"] == 200:
                         if result["result"][3]:
-                            return "index.html"
+                            return "index"
                         else:
-                            return "link_discord_register.html"
-        return "login.html"
+                            return "link_discord_register"
+        return "login"
 
     def update_password(self, nickname, password, new_password):
         response = requests.post(
@@ -604,17 +604,17 @@ class Api:
     def reinstall(self, what):
         if what == "minecraft":
             remove_directory(minecraft_dir)
-            self.load_tab("index.html")
+            self.load_tab("index")
             self.change_innerHTML("btn_play", "Установить")
 
         elif what == "mods":
             remove_directory(minecraft_dir + "/mods")
-            self.load_tab("index.html")
+            self.load_tab("index")
             self.change_innerHTML("btn_play", "Установить")
 
         elif what == "rp":
             remove_file(minecraft_dir + "/resourcepacks/WacoRP.zip")
-            self.load_tab("index.html")
+            self.load_tab("index")
             self.change_innerHTML("btn_play", "Установить")
 
 if __name__ == '__main__':
@@ -630,5 +630,5 @@ if __name__ == '__main__':
     if minecraft_version is None:
         api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
-    window = webview.create_window(title="WacoLauncher", url=f"http://127.0.0.1:5000/index", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
+    window = webview.create_window(title="WacoLauncher", url=f"web/{api.check_login()}", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
     webview.start(debug=False)
