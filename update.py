@@ -134,11 +134,11 @@ class Api:
         api.writeJson("data/launcher_version.json", launcher_version)
 
         exe_path = os.path.abspath("wacolauncher/wacolauncher.exe")
+
         subprocess.Popen([exe_path], shell=True)
         window.destroy()
 
 if __name__ == '__main__':
     api = Api()
-
     window = webview.create_window(title="WacoLauncher", width=400, url="https://wacolauncher-web-production.up.railway.app/update", height=100, js_api=api, resizable=False, fullscreen=False, frameless=True, hidden=True)
     webview.start(api.update_launcher, debug=False)
