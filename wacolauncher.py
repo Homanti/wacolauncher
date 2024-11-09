@@ -1,6 +1,7 @@
 import json
 import shutil
 import subprocess
+import uuid
 import webbrowser
 import zipfile
 import io
@@ -84,6 +85,7 @@ def save_account(nickname, password):
 
         # Сохраняем изменения обратно в credentials.json
         Api().writeJson("data/credentials.json", data)
+        Api().writeJson(minecraft_dir + "/config/autologin.json", {"password": password})
     except Exception as e:
         print(f"Ошибка при обработке файла data/credentials.json: {e}, информация которая записывалась в файл {new_account_data}")
 
@@ -562,7 +564,9 @@ class Api:
                     self.writeJson(minecraft_dir + "/CustomSkinLoader/CustomSkinLoader.json", skin_settings)
                     options = {
                         "username": account["result"][1],
-                        "jvmArguments": [f"-Xmx{settings["ram"]}m", f"-Xms{settings["ram"]}m"]
+                        "jvmArguments": [f"-Xmx{settings["ram"]}m", f"-Xms{settings["ram"]}m"],
+                        "token": "pizdec",
+                        "uuid": "6cf4d1b15465435986872a5fb476aff4",
                     }
 
                     launched = True
