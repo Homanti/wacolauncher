@@ -572,8 +572,8 @@ class Api:
                     options = {
                         "username": account["result"][1],
                         "jvmArguments": [f"-Xmx{settings["ram"]}m", f"-Xms{settings["ram"]}m"],
-                        "token": "pizdec",
-                        "uuid": "6cf4d1b15465435986872a5fb476aff4",
+                        "uuid": account["result"][8],
+                        "token": account["result"][9]
                     }
 
                     launched = True
