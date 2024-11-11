@@ -1,11 +1,11 @@
 import json
 import shutil
 import subprocess
-import uuid
 import webbrowser
 import zipfile
 import io
 from urllib.parse import urlsplit
+import keyring
 import psutil
 import webview
 import os
@@ -50,12 +50,13 @@ createFolderIfNeeded("data")
 createFolderIfNeeded(minecraft_dir)
 
 def save_account(nickname, password):
+    keyring.set_password("WacoLauncher", nickname, password)
     new_account_data = {
         "nickname": nickname,
-        "password": password,
         "active": True,
     }
     try:
+        # Загружаем данные аккаунтов без паролей
         try:
             with open("data/credentials.json", "r") as json_file:
                 data = json.load(json_file)
@@ -68,11 +69,6 @@ def save_account(nickname, password):
             updated = False
             for account in data:
                 if account["nickname"] == nickname:
-                    if account["password"] != password:
-                        account["password"] = password
-                        print(f"Пароль для аккаунта с ником {nickname} был обновлен.")
-                    else:
-                        print(f"Аккаунт с ником {nickname} уже существует с таким же паролем.")
                     account["active"] = True
                     updated = True
                 else:
@@ -85,9 +81,8 @@ def save_account(nickname, password):
 
         # Сохраняем изменения обратно в credentials.json
         Api().writeJson("data/credentials.json", data)
-        Api().writeJson(minecraft_dir + "/config/autologin.json", {"password": password})
     except Exception as e:
-        print(f"Ошибка при обработке файла data/credentials.json: {e}, информация которая записывалась в файл {new_account_data}")
+        print(f"Ошибка при обработке файла data/credentials.json: {e}")
 
 def file_download(url, folder_path, what = None):
     global downloading
@@ -201,7 +196,9 @@ class Api:
         except Exception as e:
             print(f"Ошибка при обработке файла {filename}: {e}, информация которая записывалась в файл {data}")
 
-    def account_login(self, nickname, password):
+    def account_login(self, nickname):
+        password = keyring.get_password("WacoLauncher", nickname)
+
         response = requests.post(
             "https://wacodb-production.up.railway.app/database/login",
             params={"nickname": nickname, "password": password},
@@ -215,7 +212,7 @@ class Api:
             data = self.readJson("data/credentials.json")
 
             if data:
-                data = [item for item in data if not (item['nickname'] == nickname and item['password'] == password)]
+                data = [item for item in data if item['nickname'] != nickname]
                 self.writeJson("data/credentials.json", data)
 
             print(f"Login failed: {response.json()['detail']}")
@@ -238,7 +235,8 @@ class Api:
             files={'skin_png': (skin_file.name, skin_file, 'image/png')}
         )
         if response.status_code == 200:
-            return self.account_login(nickname, password)
+            save_account(nickname, password)
+            return self.account_login(nickname)
         elif response.status_code == 409:
             return {"status_code": 409}
         else:
@@ -271,17 +269,22 @@ class Api:
         if data:
             for item in data:
                 if item['active']:
-                    return self.account_login(item['nickname'], item['password'])
+                    nickname = item['nickname']
+                    password = keyring.get_password("WacoLauncher", nickname)
+                    if password:
+                        return self.account_login(nickname)
+        return None
 
     def check_login(self):
         data = self.readJson("data/credentials.json")
         if data:
             for item in data:
                 if item['active']:
-                    result = self.account_login(item['nickname'], item['password'])
-
-                    if result["status_code"] == 200:
-                        if result["result"][3]:
+                    nickname = item['nickname']
+                    password = keyring.get_password("WacoLauncher", nickname)
+                    if password:
+                        result = self.account_login(nickname)
+                        if result["status_code"] == 200:
                             return "index"
                         else:
                             return "link_discord_register"
@@ -633,4 +636,4 @@ if __name__ == '__main__':
         api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
     window = webview.create_window(title="WacoLauncher", url=f"https://wacolauncher-web-production.up.railway.app/{api.check_login()}", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(debug=False)
+    webview.start(debug=True)
