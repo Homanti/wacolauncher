@@ -587,7 +587,7 @@ class Api:
                     launched = True
                     self.disable_button("btn_play", True)
                     self.change_innerHTML("btn_play", "Запущено")
-                    subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.7", minecraft_dir, options=options), creationflags=subprocess.CREATE_NO_WINDOW)
+                    subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.7", minecraft_dir, options=options))
 
                     launched = False
                     self.disable_button("btn_play", False)
