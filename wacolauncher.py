@@ -404,8 +404,12 @@ class Api:
             api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
             with open(minecraft_dir + "/options.txt", "w", encoding="utf-8") as file:
-                response = requests.get("https://pastebin.com/raw/ntDpjK0L")
-                file.write(response.text)
+                options = (
+                    'resourcePacks:["vanilla","pointblank_resources","pfm-asset-resources","mod_resources","file/WacoRP.zip"]\n'
+                    'lastServer:\n'
+                    'lang:ru_ru\n'
+                )
+                file.write(options)
         except Exception as e:
             self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
 
