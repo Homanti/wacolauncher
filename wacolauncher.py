@@ -203,7 +203,7 @@ class Api:
 
     def account_login(self, nickname, password):
         response = requests.post(
-            "https://wacodb-production.up.railway.app/database/login",
+            "https://wacoapi-production.up.railway.app/database/login",
             params={"nickname": nickname, "password": password},
         )
 
@@ -228,7 +228,7 @@ class Api:
         skin_file.name = f'{nickname}_skin.png'
 
         response = requests.post(
-            "https://wacodb-production.up.railway.app/database/register",
+            "https://wacoapi-production.up.railway.app/database/register",
             params={
                 "nickname": nickname,
                 "password": password,
@@ -250,7 +250,7 @@ class Api:
         skin_file.name = f'{nickname}_skin.png'
 
         response = requests.post(
-            "https://wacodb-production.up.railway.app/database/update_skin",
+            "https://wacoapi-production.up.railway.app/database/update_skin",
             params={
                 "nickname": nickname,
                 "password": password,
@@ -294,7 +294,7 @@ class Api:
 
     def update_password(self, nickname, password, new_password):
         response = requests.post(
-            "https://wacodb-production.up.railway.app/database/",
+            "https://wacoapi-production.up.railway.app/database/",
             params={"action": "update_password", "nickname": nickname, "password": password, "new_password": new_password}
         )
 
@@ -310,7 +310,7 @@ class Api:
 
     def delete_account(self, nickname, password):
         response = requests.post(
-            "https://wacodb-production.up.railway.app/database/",
+            "https://wacoapi-production.up.railway.app/database/",
             params={"action": "delete", "nickname": nickname, "password": password}
         )
 
@@ -638,4 +638,4 @@ if __name__ == '__main__':
         api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
     window = webview.create_window(title="WacoLauncher", url=f"https://wacolauncher-web-production.up.railway.app/{api.check_login()}", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(debug=True)
+    webview.start(debug=False)
