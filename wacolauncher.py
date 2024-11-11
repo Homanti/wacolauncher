@@ -578,7 +578,7 @@ class Api:
                         "jvmArguments": [
                             f"-Xmx{settings['ram']}m",
                             f"-Xms{settings['ram']}m",
-                            "-javaagent:path/to/authlib-injector.jar=https://your-auth-server.com"
+                            "-javaagent:D:/python_projects/wacolauncher/authlib-injector-1.2.5.jar=https://wacoapi-production.up.railway.app/"
                         ],
                         "uuid": account["result"][8],
                         "token": account["result"][9]
