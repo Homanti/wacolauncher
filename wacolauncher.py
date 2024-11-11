@@ -288,8 +288,10 @@ class Api:
                         result = self.account_login(nickname, password)
                         if result["status_code"] == 200:
                             return "index"
-                        else:
+                        elif result["discord_id"] is None:
                             return "link_discord_register"
+                        else:
+                            return "login"
         return "login"
 
     def update_password(self, nickname, password, new_password):
