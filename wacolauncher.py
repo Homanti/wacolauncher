@@ -50,13 +50,13 @@ createFolderIfNeeded("data")
 createFolderIfNeeded(minecraft_dir)
 
 def save_account(nickname, password):
-    keyring.set_password("WacoLauncher", nickname, password)
+    api = Api()
+    api.set_password(nickname, password)
     new_account_data = {
         "nickname": nickname,
         "active": True,
     }
     try:
-        # Загружаем данные аккаунтов без паролей
         try:
             with open("data/credentials.json", "r") as json_file:
                 data = json.load(json_file)
@@ -79,8 +79,7 @@ def save_account(nickname, password):
                     account["active"] = False
                 data.append(new_account_data)
 
-        # Сохраняем изменения обратно в credentials.json
-        Api().writeJson("data/credentials.json", data)
+        api.writeJson("data/credentials.json", data)
     except Exception as e:
         print(f"Ошибка при обработке файла data/credentials.json: {e}")
 
@@ -196,9 +195,13 @@ class Api:
         except Exception as e:
             print(f"Ошибка при обработке файла {filename}: {e}, информация которая записывалась в файл {data}")
 
-    def account_login(self, nickname):
-        password = keyring.get_password("WacoLauncher", nickname)
+    def set_password(self, nickname, password):
+        keyring.set_password("WacoLauncher", nickname, password)
 
+    def get_password(self, nickname):
+        return keyring.get_password("WacoLauncher", nickname)
+
+    def account_login(self, nickname, password):
         response = requests.post(
             "https://wacodb-production.up.railway.app/database/login",
             params={"nickname": nickname, "password": password},
@@ -235,8 +238,7 @@ class Api:
             files={'skin_png': (skin_file.name, skin_file, 'image/png')}
         )
         if response.status_code == 200:
-            save_account(nickname, password)
-            return self.account_login(nickname)
+            return self.account_login(nickname, password)
         elif response.status_code == 409:
             return {"status_code": 409}
         else:
@@ -270,9 +272,9 @@ class Api:
             for item in data:
                 if item['active']:
                     nickname = item['nickname']
-                    password = keyring.get_password("WacoLauncher", nickname)
+                    password = self.get_password(nickname)
                     if password:
-                        return self.account_login(nickname)
+                        return self.account_login(nickname, password)
         return None
 
     def check_login(self):
@@ -281,9 +283,9 @@ class Api:
             for item in data:
                 if item['active']:
                     nickname = item['nickname']
-                    password = keyring.get_password("WacoLauncher", nickname)
+                    password = self.get_password(nickname)
                     if password:
-                        result = self.account_login(nickname)
+                        result = self.account_login(nickname, password)
                         if result["status_code"] == 200:
                             return "index"
                         else:
