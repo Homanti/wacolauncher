@@ -575,7 +575,11 @@ class Api:
                     self.writeJson(minecraft_dir + "/CustomSkinLoader/CustomSkinLoader.json", skin_settings)
                     options = {
                         "username": account["result"][1],
-                        "jvmArguments": [f"-Xmx{settings["ram"]}m", f"-Xms{settings["ram"]}m"],
+                        "jvmArguments": [
+                            f"-Xmx{settings['ram']}m",
+                            f"-Xms{settings['ram']}m",
+                            "-javaagent:path/to/authlib-injector.jar=https://your-auth-server.com"
+                        ],
                         "uuid": account["result"][8],
                         "token": account["result"][9]
                     }
