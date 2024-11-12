@@ -17,30 +17,30 @@ minecraft_dir = appdata_path + "/.wacorp"
 authlib_dir = minecraft_dir + "/libraries/com/mojang/authlib"
 downloading = False
 launched = False
-skin_settings = {
-    "version": "14.20",
-    "buildNumber": 27,
-    "loadlist": [
-        {
-            "name": "Github",
-            "type": "Legacy",
-            "checkPNG": False,
-            "skin": "https://raw.githubusercontent.com/Homanti/wacoskins/main/{USERNAME}_skin.png",
-            "model": "auto"
-        }
-    ],
-    "enableDynamicSkull": True,
-    "enableTransparentSkin": False,
-    "forceLoadAllTextures": True,
-    "enableCape": True,
-    "threadPoolSize": 8,
-    "enableLogStdOut": False,
-    "cacheExpiry": 30,
-    "forceUpdateSkull": False,
-    "enableLocalProfileCache": False,
-    "enableCacheAutoClean": False,
-    "forceDisableCache": False
-}
+# skin_settings = {
+#     "version": "14.20",
+#     "buildNumber": 27,
+#     "loadlist": [
+#         {
+#             "name": "Github",
+#             "type": "Legacy",
+#             "checkPNG": False,
+#             "skin": "https://raw.githubusercontent.com/Homanti/wacoskins/main/{USERNAME}_skin.png",
+#             "model": "auto"
+#         }
+#     ],
+#     "enableDynamicSkull": True,
+#     "enableTransparentSkin": False,
+#     "forceLoadAllTextures": True,
+#     "enableCape": True,
+#     "threadPoolSize": 8,
+#     "enableLogStdOut": False,
+#     "cacheExpiry": 30,
+#     "forceUpdateSkull": False,
+#     "enableLocalProfileCache": False,
+#     "enableCacheAutoClean": False,
+#     "forceDisableCache": False
+# }
 
 def createFolderIfNeeded(folder_name):
     if not os.path.exists(folder_name):
@@ -613,7 +613,7 @@ class Api:
                     launched = True
                     self.disable_button("btn_play", True)
                     self.change_innerHTML("btn_play", "Запущено")
-                    subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.7", minecraft_dir, options=options))
+                    subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.7", minecraft_dir, options=options), creationflags=subprocess.CREATE_NO_WINDOW)
 
                     launched = False
                     self.disable_button("btn_play", False)
