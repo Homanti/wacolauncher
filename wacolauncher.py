@@ -14,6 +14,7 @@ import minecraft_launcher_lib
 
 appdata_path = os.path.expandvars('%APPDATA%')
 minecraft_dir = appdata_path + "/.wacorp"
+authlib_dir = minecraft_dir + "/libraries/com/mojang/authlib"
 downloading = False
 launched = False
 skin_settings = {
@@ -48,6 +49,7 @@ def createFolderIfNeeded(folder_name):
 
 createFolderIfNeeded("data")
 createFolderIfNeeded(minecraft_dir)
+createFolderIfNeeded(authlib_dir)
 
 def save_account(nickname, password):
     api = Api()
@@ -462,10 +464,31 @@ class Api:
             self.disable_button("btn_settings", False)
             self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
 
+            remove_file(authlib_dir + "/authlib-injector-1.2.5.jar")
+            self.install_authlib_injector()
+
             minecraft_version["mods"] = latest_list_mods
             self.writeJson(minecraft_dir + "/minecraft_version.json", minecraft_version)
         except Exception as e:
             self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
+
+    def install_authlib_injector(self):
+        global downloading
+        downloading = True
+        self.open_progress_bar(True)
+        self.disable_button("btn_play", True)
+        self.disable_button("profile_button", True)
+        self.disable_button("btn_settings", True)
+        self.change_innerHTML("btn_play", 'Установка...')
+
+        file_download(f"https://github.com/yushijinhun/authlib-injector/releases/download/v1.2.5/authlib-injector-1.2.5.jar", authlib_dir, f"модов: authlib-injector-1.2.5.jar")
+
+        downloading = False
+        self.open_progress_bar(False)
+        self.disable_button("btn_play", False)
+        self.disable_button("profile_button", False)
+        self.disable_button("btn_settings", False)
+        self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
 
     def install_rp(self):
         global downloading
@@ -534,6 +557,9 @@ class Api:
     def check_minecraft_installation(self):
         return os.path.exists(minecraft_dir + "/versions/1.20.1-forge-47.3.7/1.20.1-forge-47.3.7.jar")
 
+    def check_authlib_injector_installation(self):
+        return os.path.exists(authlib_dir + "/authlib-injector-1.2.5.jar")
+
     def check_mods_installation(self):
         list_mods = self.readJson(minecraft_dir + "/minecraft_version.json")["mods"]
         latest_list_mods = self.readJson("https://github.com/Homanti/wacominecraft/raw/main/mods.json")["mods"]
@@ -564,7 +590,7 @@ class Api:
 
     def start_minecraft(self):
         global launched
-        if self.check_minecraft_installation() and self.check_mods_installation() and self.check_rp_installation() and self.check_pointblank_installation():
+        if self.check_minecraft_installation() and self.check_mods_installation() and self.check_rp_installation() and self.check_pointblank_installation() and self.check_authlib_injector_installation():
             settings = self.readJson("data/settings.json")
             account = self.get_active_account()
 
@@ -578,7 +604,7 @@ class Api:
                         "jvmArguments": [
                             f"-Xmx{settings['ram']}m",
                             f"-Xms{settings['ram']}m",
-                            "-javaagent:D:/python_projects/wacolauncher/authlib-injector-1.2.5.jar=http://192.168.0.194:8000"
+                            f"-javaagent:{authlib_dir}/authlib-injector-1.2.5.jar=https://wacoapi-production.up.railway.app/"
                         ],
                         "uuid": account["result"][8],
                         "token": account["result"][9]
@@ -605,14 +631,17 @@ class Api:
             if not self.check_minecraft_installation():
                 self.install_minecraft()
 
+            if not self.check_authlib_injector_installation():
+                self.install_authlib_injector()
+
             if not self.check_mods_installation():
                 self.install_mods()
 
             if not self.check_rp_installation():
                 self.install_rp()
 
-        if not self.check_pointblank_installation():
-            self.install_pointblank()
+            if not self.check_pointblank_installation():
+                self.install_pointblank()
 
     def get_max_ram(self):
         memory_info = psutil.virtual_memory()
