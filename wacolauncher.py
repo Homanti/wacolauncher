@@ -594,11 +594,11 @@ class Api:
             settings = self.readJson("data/settings.json")
             account = self.get_active_account()
 
-            createFolderIfNeeded(minecraft_dir + "/CustomSkinLoader")
+            # createFolderIfNeeded(minecraft_dir + "/CustomSkinLoader")
 
             if account["status_code"] == 200:
                 if account["result"][7]:
-                    self.writeJson(minecraft_dir + "/CustomSkinLoader/CustomSkinLoader.json", skin_settings)
+                    # self.writeJson(minecraft_dir + "/CustomSkinLoader/CustomSkinLoader.json", skin_settings)
                     options = {
                         "username": account["result"][1],
                         "jvmArguments": [
