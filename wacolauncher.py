@@ -394,7 +394,7 @@ class Api:
                 "setMax": lambda value: max_value.__setitem__(0, value)
             }
 
-            minecraft_launcher_lib.forge.install_forge_version("1.20.1-47.3.7", minecraft_dir, callback=callback)
+            minecraft_launcher_lib.forge.install_forge_version("1.20.1-47.3.12", minecraft_dir, callback=callback)
 
             downloading = False
 
@@ -555,7 +555,7 @@ class Api:
             self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
 
     def check_minecraft_installation(self):
-        return os.path.exists(minecraft_dir + "/versions/1.20.1-forge-47.3.7/1.20.1-forge-47.3.7.jar")
+        return os.path.exists(minecraft_dir + "/versions/1.20.1-forge-47.3.12/1.20.1-forge-47.3.12.jar")
 
     def check_authlib_injector_installation(self):
         return os.path.exists(authlib_dir + "/authlib-injector-1.2.5.jar")
@@ -613,7 +613,7 @@ class Api:
                     launched = True
                     self.disable_button("btn_play", True)
                     self.change_innerHTML("btn_play", "Запущено")
-                    subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.7", minecraft_dir, options=options), creationflags=subprocess.CREATE_NO_WINDOW)
+                    subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.12", minecraft_dir, options=options), creationflags=subprocess.CREATE_NO_WINDOW)
 
                     launched = False
                     self.disable_button("btn_play", False)
