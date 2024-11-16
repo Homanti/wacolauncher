@@ -282,20 +282,23 @@ class Api:
 
     def check_login(self):
         data = self.readJson("data/credentials.json")
-        if data:
-            for item in data:
-                if item['active']:
-                    nickname = item['nickname']
-                    password = self.get_password(nickname)
-                    if password:
-                        result = self.account_login(nickname, password)
-                        if result["status_code"] == 200:
-                            return "index"
-                        elif result["discord_id"] is None:
-                            return "link_discord_register"
-                        else:
-                            return "login"
-        return "login"
+        try:
+            if data:
+                for item in data:
+                    if item['active']:
+                        nickname = item['nickname']
+                        password = self.get_password(nickname)
+                        if password:
+                            result = self.account_login(nickname, password)
+                            if result["status_code"] == 200:
+                                return "index"
+                            elif result["discord_id"] is None:
+                                return "link_discord_register"
+                            else:
+                                return "login"
+            return "login"
+        except:
+            return "login"
 
     def update_password(self, nickname, password, new_password):
         response = requests.post(
