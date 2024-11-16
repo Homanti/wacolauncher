@@ -665,11 +665,14 @@ class Api:
             self.change_innerHTML("btn_play", "Установить")
 
     def get_server_online(self):
-        server_ip = "192.168.0.194:25565"
+        try:
+            server_ip = "192.168.0.194:25565"
 
-        server = JavaServer.lookup(server_ip)
+            server = JavaServer.lookup(server_ip)
 
-        status = server.status()
+            status = server.status()
+        except:
+            return False
         return status.players.online
 
 if __name__ == '__main__':
