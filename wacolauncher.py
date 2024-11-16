@@ -413,6 +413,8 @@ class Api:
                     'lang:ru_ru\n'
                 )
                 file.write(options)
+
+            file_download("https://github.com/Homanti/wacominecraft/raw/refs/heads/main/servers.dat", minecraft_dir, "Minecraft")
         except Exception as e:
             self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
 
@@ -666,7 +668,7 @@ class Api:
 
     def get_server_online(self):
         try:
-            server_ip = "192.168.0.194:25565"
+            server_ip = "m7.joinserver.xyz:25625"
 
             server = JavaServer.lookup(server_ip)
 
