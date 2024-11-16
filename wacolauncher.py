@@ -248,23 +248,23 @@ class Api:
             print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
             return {"status_code": 401}
 
-    def update_skin(self, nickname, password, skin_bytes):
-        skin_file = io.BytesIO(bytes(skin_bytes))
-        skin_file.name = f'{nickname}_skin.png'
-
-        response = requests.post(
-            "https://wacoapi-production.up.railway.app/database/update_skin",
-            params={
-                "nickname": nickname,
-                "password": password,
-            },
-            files={'skin_png': (skin_file.name, skin_file, 'image/png')}
-        )
-        if response.status_code == 200:
-            return True
-        else:
-            print(f"Update skin failed: {response.json().get('detail', 'Unknown error')}")
-            return False
+    # def update_skin(self, nickname, password, skin_bytes):
+    #     skin_file = io.BytesIO(bytes(skin_bytes))
+    #     skin_file.name = f'{nickname}_skin.png'
+    #
+    #     response = requests.post(
+    #         "https://wacoapi-production.up.railway.app/database/update_skin",
+    #         params={
+    #             "nickname": nickname,
+    #             "password": password,
+    #         },
+    #         files={'skin_png': (skin_file.name, skin_file, 'image/png')}
+    #     )
+    #     if response.status_code == 200:
+    #         return True
+    #     else:
+    #         print(f"Update skin failed: {response.json().get('detail', 'Unknown error')}")
+    #         return False
 
     def open_link(self, url):
         webbrowser.open(url)
@@ -299,7 +299,7 @@ class Api:
 
     def update_password(self, nickname, password, new_password):
         response = requests.post(
-            "https://wacoapi-production.up.railway.app/database/",
+            "https://wacoapi-production.up.railway.app/database/update_password",
             params={"action": "update_password", "nickname": nickname, "password": password, "new_password": new_password}
         )
 
