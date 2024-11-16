@@ -2,7 +2,6 @@ psutil
 pywebview
 requests
 minecraft-launcher-lib
-minecraft-launcher-lib
 keyring
 keyrings.alt
 cx_Freeze
