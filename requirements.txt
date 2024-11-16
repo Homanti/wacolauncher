@@ -2,3 +2,5 @@ psutil
 pywebview
 requests
 minecraft-launcher-lib
+keyring
+keyrings.alt

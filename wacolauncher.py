@@ -11,6 +11,7 @@ import webview
 import os
 import requests
 import minecraft_launcher_lib
+from mcstatus import JavaServer
 
 appdata_path = os.path.expandvars('%APPDATA%')
 minecraft_dir = appdata_path + "/.wacorp"
@@ -662,6 +663,14 @@ class Api:
             remove_file(minecraft_dir + "/resourcepacks/WacoRP.zip")
             self.load_tab("index")
             self.change_innerHTML("btn_play", "Установить")
+
+    def get_server_online(self):
+        server_ip = "192.168.0.194:25565"
+
+        server = JavaServer.lookup(server_ip)
+
+        status = server.status()
+        return status.players.online
 
 if __name__ == '__main__':
     api = Api()
