@@ -648,7 +648,7 @@ class Api:
                     self.disable_button("btn_play", True)
                     self.change_innerHTML("btn_play", "Запущено")
                     try:
-                        subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.12", minecraft_dir, options=options), creationflags=subprocess.CREATE_NO_WINDOW)
+                        subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.12", minecraft_dir, options=options), shell=True)
                     except Exception as e:
                         self.show_info_message("Ошибка", f"Ошибка запуска Minecraft: {e}")
 
