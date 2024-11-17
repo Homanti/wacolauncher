@@ -666,6 +666,7 @@ class Api:
 
         elif what == "rp":
             remove_file(minecraft_dir + "/resourcepacks/WacoRP.zip")
+            remove_file(minecraft_dir + "/pointblank")
             self.load_tab("index")
             self.change_innerHTML("btn_play", "Установить")
 
