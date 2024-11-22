@@ -747,7 +747,7 @@ class Api:
                     window.evaluate_js(f"""
                     const players_online = document.getElementById('players_online').textContent = "Сервер оффлайн"
                     """)
-            time.sleep(3)
+            time.sleep(5)
 
 if __name__ == '__main__':
     api = Api()
