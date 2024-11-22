@@ -1,6 +1,8 @@
 import json
 import shutil
 import subprocess
+import threading
+import time
 import webbrowser
 import zipfile
 import io
@@ -12,13 +14,15 @@ import os
 import requests
 import minecraft_launcher_lib
 from mcstatus import JavaServer
-from typing_extensions import runtime
 
 appdata_path = os.path.expandvars('%APPDATA%')
 minecraft_dir = appdata_path + "/.wacorp"
 authlib_dir = minecraft_dir + "/libraries/com/mojang/authlib"
 downloading = False
 launched = False
+tab = None
+server_status = None
+
 # skin_settings = {
 #     "version": "14.20",
 #     "buildNumber": 27,
@@ -159,7 +163,20 @@ def remove_directory(dirpath):
 
 class Api:
     def load_tab(self, html_name, info_message_title = None, info_message_text = None):
+        global tab
+        tab = html_name
         window.load_url(f"https://wacolauncher-web-production.up.railway.app/{html_name}")
+
+        if html_name == "index" or html_name == "settings":
+            if server_status:
+                window.evaluate_js(f"""
+                const players_online = document.getElementById('players_online').textContent = "Игроков онлайн: {server_status.players.online}"
+                """)
+            else:
+                window.evaluate_js(f"""
+                const players_online = document.getElementById('players_online').textContent = "Сервер оффлайн"
+                """)
+
         if html_name == "index" and downloading:
             self.open_progress_bar(True)
             self.disable_button("btn_play", True)
@@ -282,6 +299,7 @@ class Api:
         return None
 
     def check_login(self):
+        global tab
         data = self.readJson("data/credentials.json")
         try:
             if data:
@@ -292,14 +310,20 @@ class Api:
                         if password:
                             result = self.account_login(nickname, password)
                             if result["status_code"] == 200:
+                                tab = "index"
                                 return "index"
                             elif result["discord_id"] is None:
-                                return "link_discord_register"
+                                tab = "link_discord_register"
+                                return tab
                             else:
-                                return "login"
-            return "login"
+                                tab = "login"
+                                return tab
+            else:
+                tab = "login"
+                return tab
         except:
-            return "login"
+            tab = "login"
+            return tab
 
     def update_password(self, nickname, password, new_password):
         response = requests.post(
@@ -648,7 +672,7 @@ class Api:
                     self.disable_button("btn_play", True)
                     self.change_innerHTML("btn_play", "Запущено")
                     try:
-                        subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.12", minecraft_dir, options=options), shell=True)
+                        subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.12", minecraft_dir, options=options), creationflags=subprocess.CREATE_NO_WINDOW)
                     except Exception as e:
                         self.show_info_message("Ошибка", f"Ошибка запуска Minecraft: {e}")
 
@@ -704,16 +728,27 @@ class Api:
             self.load_tab("index")
             self.change_innerHTML("btn_play", "Установить")
 
-    def get_server_online(self):
-        try:
-            server_ip = "m7.joinserver.xyz:25625"
+    def set_server_online(self):
+        global server_status
+        while True:
+            if tab == "index" or tab == "settings":
+                print(1)
+                try:
+                    server_ip = "m7.joinserver.xyz:25625"
 
-            server = JavaServer.lookup(server_ip)
+                    server = JavaServer.lookup(server_ip)
 
-            status = server.status()
-        except:
-            return False
-        return status.players.online
+                    server_status = server.status()
+
+                    window.evaluate_js(f"""
+                    const players_online = document.getElementById('players_online').textContent = "Игроков онлайн: {server_status.players.online}"
+                    """)
+                except:
+                    server_status = False
+                    window.evaluate_js(f"""
+                    const players_online = document.getElementById('players_online').textContent = "Сервер оффлайн"
+                    """)
+            time.sleep(3)
 
 if __name__ == '__main__':
     api = Api()
@@ -728,5 +763,6 @@ if __name__ == '__main__':
     if minecraft_version is None:
         api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
+    threading.Thread(target=api.set_server_online, daemon=True).start()
     window = webview.create_window(title="WacoLauncher", url=f"https://wacolauncher-web-production.up.railway.app/{api.check_login()}", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
     webview.start(debug=False)
