@@ -732,7 +732,6 @@ class Api:
         global server_status
         while True:
             if tab == "index" or tab == "settings":
-                print(1)
                 try:
                     server_ip = "m7.joinserver.xyz:25625"
 
