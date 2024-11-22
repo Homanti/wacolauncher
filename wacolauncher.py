@@ -174,7 +174,7 @@ class Api:
                 """)
             else:
                 window.evaluate_js(f"""
-                const players_online = document.getElementById('players_online').textContent = "Сервер оффлайн"
+                const players_online = document.getElementById('players_online').textContent = "Сервер выключен"
                 """)
 
         if html_name == "index" and downloading:
@@ -717,7 +717,7 @@ class Api:
                 except:
                     server_status = False
                     window.evaluate_js(f"""
-                    const players_online = document.getElementById('players_online').textContent = "Сервер оффлайн"
+                    const players_online = document.getElementById('players_online').textContent = "Сервер выключен"
                     """)
             time.sleep(5)
 
