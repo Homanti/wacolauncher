@@ -448,13 +448,6 @@ class Api:
 
             minecraft_launcher_lib.forge.install_forge_version("1.20.1-47.3.12", minecraft_dir, callback=callback, java="C:\\Program Files\\Java\\jdk-17\\bin\\javaw.exe")
 
-            downloading = False
-
-            self.open_progress_bar(False)
-            self.disable_button("btn_play", False)
-            self.disable_button("profile_button", False)
-            self.disable_button("btn_settings", False)
-            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
             api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
             with open(minecraft_dir + "/options.txt", "w", encoding="utf-8") as file:
@@ -468,6 +461,13 @@ class Api:
             file_download("https://github.com/Homanti/wacominecraft/raw/refs/heads/main/servers.dat", minecraft_dir, "Minecraft")
         except Exception as e:
             self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
+        finally:
+            downloading = False
+            self.open_progress_bar(False)
+            self.disable_button("btn_play", False)
+            self.disable_button("profile_button", False)
+            self.disable_button("btn_settings", False)
+            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
 
     def install_mods(self):
         global downloading
@@ -511,13 +511,6 @@ class Api:
                     print(f"Скачивание мода: {mod}")
                     file_download(f"https://github.com/Homanti/wacominecraft/raw/main/mods/{mod}", mods_dir, f"модов: {mod}")
 
-            downloading = False
-            self.open_progress_bar(False)
-            self.disable_button("btn_play", False)
-            self.disable_button("profile_button", False)
-            self.disable_button("btn_settings", False)
-            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
-
             remove_file(authlib_dir + "/authlib-injector-1.2.5.jar")
             self.install_authlib_injector()
 
@@ -525,28 +518,37 @@ class Api:
             self.writeJson(minecraft_dir + "/minecraft_version.json", minecraft_version)
         except Exception as e:
             self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
+        finally:
+            downloading = False
+            self.open_progress_bar(False)
+            self.disable_button("btn_play", False)
+            self.disable_button("profile_button", False)
+            self.disable_button("btn_settings", False)
+            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
 
     def install_authlib_injector(self):
         global downloading
-        downloading = True
-        self.open_progress_bar(True)
-        self.disable_button("btn_play", True)
-        self.disable_button("profile_button", True)
-        self.disable_button("btn_settings", True)
-        self.change_innerHTML("btn_play", 'Установка...')
+        try:
+            downloading = True
+            self.open_progress_bar(True)
+            self.disable_button("btn_play", True)
+            self.disable_button("profile_button", True)
+            self.disable_button("btn_settings", True)
+            self.change_innerHTML("btn_play", 'Установка...')
 
-        file_download(f"https://github.com/yushijinhun/authlib-injector/releases/download/v1.2.5/authlib-injector-1.2.5.jar", authlib_dir, f"модов: authlib-injector-1.2.5.jar")
-
-        downloading = False
-        self.open_progress_bar(False)
-        self.disable_button("btn_play", False)
-        self.disable_button("profile_button", False)
-        self.disable_button("btn_settings", False)
-        self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
+            file_download(f"https://github.com/yushijinhun/authlib-injector/releases/download/v1.2.5/authlib-injector-1.2.5.jar", authlib_dir, f"модов: authlib-injector-1.2.5.jar")
+        except Exception as e:
+            self.show_info_message("Ошибка", f"Ошибка при установке authlib-injector: {e}")
+        finally:
+            downloading = False
+            self.open_progress_bar(False)
+            self.disable_button("btn_play", False)
+            self.disable_button("profile_button", False)
+            self.disable_button("btn_settings", False)
+            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
 
     def install_rp(self):
         global downloading
-
         try:
             minecraft_version = self.readJson(minecraft_dir + "/minecraft_version.json")
             latest_minecraft_version = self.readJson("https://pastebin.com/raw/70N3V9Nj")
@@ -562,17 +564,17 @@ class Api:
             remove_file(minecraft_dir + "/resourcepacks/WacoRP.zip")
             file_download(url="https://github.com/Homanti/wacominecraft/raw/main/WacoRP.zip", folder_path=minecraft_dir + "/resourcepacks", what="ресурс пака")
 
+            minecraft_version["rp_version"] = latest_rp_version
+            self.writeJson(minecraft_dir + "/minecraft_version.json", minecraft_version)
+        except Exception as e:
+            self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
+        finally:
             downloading = False
             self.open_progress_bar(False)
             self.disable_button("btn_play", False)
             self.disable_button("profile_button", False)
             self.disable_button("btn_settings", False)
             self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
-
-            minecraft_version["rp_version"] = latest_rp_version
-            self.writeJson(minecraft_dir + "/minecraft_version.json", minecraft_version)
-        except Exception as e:
-            self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
 
     def install_pointblank(self):
         global downloading
@@ -596,17 +598,17 @@ class Api:
 
             remove_file(minecraft_dir + "/pointblank/pointblank.zip")
 
+            minecraft_version["pointblank"] = latest_pointblank_version
+            self.writeJson(minecraft_dir + "/minecraft_version.json", minecraft_version)
+        except Exception as e:
+            self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
+        finally:
             downloading = False
             self.open_progress_bar(False)
             self.disable_button("btn_play", False)
             self.disable_button("profile_button", False)
             self.disable_button("btn_settings", False)
             self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
-
-            minecraft_version["pointblank"] = latest_pointblank_version
-            self.writeJson(minecraft_dir + "/minecraft_version.json", minecraft_version)
-        except Exception as e:
-            self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
 
     def check_minecraft_installation(self):
         return os.path.exists(minecraft_dir + "/versions/1.20.1-forge-47.3.12/1.20.1-forge-47.3.12.jar")
