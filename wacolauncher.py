@@ -406,29 +406,6 @@ class Api:
         show_info_modal('{title}', '{text}');
         """)
 
-    def install_java(self):
-        global downloading
-        try:
-            downloading = True
-            self.open_progress_bar(True)
-            self.disable_button("btn_play", True)
-            self.disable_button("profile_button", True)
-            self.disable_button("btn_settings", True)
-            self.change_innerHTML("btn_play", 'Установка...')
-
-            file_download("https://download.oracle.com/java/17/archive/jdk-17.0.12_windows-x64_bin.exe", ".", "Java")
-            self.progress_bar_set(100, "Java")
-            subprocess.run(["powershell", "-Command", "Start-Process 'jdk-17.0.12_windows-x64_bin.exe' -ArgumentList 'INSTALL_SILENT=Enable REBOOT=Disable SPONSORS=Disable' -Wait -PassThru -Verb RunAs"], check=True, creationflags=0x08000000)
-        except Exception as e:
-            self.show_info_message("Ошибка", f"Ошибка установки Java: {e}")
-        finally:
-            remove_file("jdk-17.0.12_windows-x64_bin.exe")
-            self.open_progress_bar(False)
-            self.disable_button("btn_play", False)
-            self.disable_button("profile_button", False)
-            self.disable_button("btn_settings", False)
-            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
-
     def install_minecraft(self):
         global downloading
         try:
@@ -446,7 +423,7 @@ class Api:
                 "setMax": lambda value: max_value.__setitem__(0, value)
             }
 
-            minecraft_launcher_lib.forge.install_forge_version("1.20.1-47.3.12", minecraft_dir, callback=callback, java="C:\\Program Files\\Java\\jdk-17\\bin\\javaw.exe")
+            minecraft_launcher_lib.forge.install_forge_version("1.20.1-47.3.12", minecraft_dir, callback=callback)
 
             api.writeJson(minecraft_dir + "/minecraft_version.json", {"mods": [], "rp_version": None, "pointblank": None})
 
@@ -613,9 +590,6 @@ class Api:
     def check_minecraft_installation(self):
         return os.path.exists(minecraft_dir + "/versions/1.20.1-forge-47.3.12/1.20.1-forge-47.3.12.jar")
 
-    def check_java_installation(self):
-        return os.path.exists("C:\\Program Files\\Java\\jdk-17\\bin\\javaw.exe")
-
     def check_authlib_injector_installation(self):
         return os.path.exists(authlib_dir + "/authlib-injector-1.2.5.jar")
 
@@ -649,7 +623,7 @@ class Api:
 
     def start_minecraft(self):
         global launched
-        if self.check_java_installation() and self.check_minecraft_installation() and self.check_mods_installation() and self.check_rp_installation() and self.check_pointblank_installation() and self.check_authlib_injector_installation():
+        if self.check_minecraft_installation() and self.check_mods_installation() and self.check_rp_installation() and self.check_pointblank_installation() and self.check_authlib_injector_installation():
             settings = self.readJson("data/settings.json")
             account = self.get_active_account()
 
@@ -659,7 +633,6 @@ class Api:
                 if account["result"][7]:
                     # self.writeJson(minecraft_dir + "/CustomSkinLoader/CustomSkinLoader.json", skin_settings)
                     options = {
-                        "executablePath": "C:/Program Files/Java/jdk-17/bin/javaw.exe",
                         "username": account["result"][1],
                         "jvmArguments": [
                             f"-Xmx{settings['ram']}m",
@@ -691,9 +664,6 @@ class Api:
                 self.show_info_message("Ошибка", "Произошла непредвиденная ошибка. Попробуйте еще раз.")
 
         else:
-            if not self.check_java_installation():
-                self.install_java()
-
             if not self.check_minecraft_installation():
                 self.install_minecraft()
 
