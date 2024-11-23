@@ -14,6 +14,21 @@ import os
 import requests
 import minecraft_launcher_lib
 from mcstatus import JavaServer
+import logging
+import sys
+
+def setup_logging(log_file="launcher_logs.txt"):
+    logging.basicConfig(
+        level=logging.DEBUG,
+        format="%(asctime)s [%(levelname)s] %(message)s",
+        handlers=[
+            logging.FileHandler(log_file, mode='w', encoding='utf-8'),
+            logging.StreamHandler(sys.stdout)
+        ]
+    )
+
+setup_logging()
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 appdata_path = os.path.expandvars('%APPDATA%')
 minecraft_dir = appdata_path + "/.wacorp"
@@ -51,7 +66,7 @@ server_status = None
 def createFolderIfNeeded(folder_name):
     if not os.path.exists(folder_name):
         os.makedirs(folder_name, exist_ok=True)
-        print(f"Папка {folder_name} создана")
+        logging.info(f"Папка {folder_name} создана")
 
 createFolderIfNeeded("data")
 createFolderIfNeeded(minecraft_dir)
@@ -89,7 +104,7 @@ def save_account(nickname, password):
 
         api.writeJson("data/credentials.json", data)
     except Exception as e:
-        print(f"Ошибка при обработке файла data/credentials.json: {e}")
+        logging.error(f"Ошибка при обработке файла data/credentials.json: {e}")
 
 def file_download(url, folder_path, what = None):
     global downloading
@@ -124,10 +139,10 @@ def file_download(url, folder_path, what = None):
                     if what:
                         api.progress_bar_set(progress, what)
 
-            print(f"Файл успешно загружен и сохранен в {file_path}.")
+            logging.info(f"Файл успешно загружен и сохранен в {file_path}.")
 
     except requests.exceptions.RequestException as e:
-        print(f"Ошибка загрузки файла: {e}")
+        logging.error(f"Ошибка загрузки файла: {e}")
         return False
 
     downloading = False
@@ -146,20 +161,20 @@ def show_minecraft_install_progress(progress, total, status):
 def remove_file(filepath):
     try:
         os.remove(filepath)
-        print(f"Файл {filepath} успешно удален.")
+        logging.info(f"Файл {filepath} успешно удален.")
     except FileNotFoundError:
-        print(f"Файл {filepath} не найден.")
+        logging.warning(f"Файл {filepath} не найден.")
     except Exception as e:
-        print(f"Ошибка при удалении файла {filepath}: {e}")
+        logging.error(f"Ошибка при удалении файла {filepath}: {e}")
 
 def remove_directory(dirpath):
     try:
         shutil.rmtree(dirpath)
-        print(f"Директория {dirpath} и все ее содержимое успешно удалены.")
+        logging.info(f"Директория {dirpath} и все ее содержимое успешно удалены.")
     except FileNotFoundError:
-        print(f"Директория {dirpath} не найдена.")
+        logging.warning(f"Директория {dirpath} не найдена.")
     except Exception as e:
-        print(f"Ошибка при удалении директории {dirpath}: {e}")
+        logging.error(f"Ошибка при удалении директории {dirpath}: {e}")
 
 class Api:
     def load_tab(self, html_name, info_message_title = None, info_message_text = None):
@@ -195,26 +210,26 @@ class Api:
                 response.raise_for_status()
                 return response.json()
             except requests.RequestException as e:
-                print(f"Ошибка при запросе к {filename}: {e}")
+                logging.error(f"Ошибка при запросе к {filename}: {e}")
                 return None
         else:
             try:
                 with open(filename, "r") as json_file:
                     return json.load(json_file)
             except FileNotFoundError:
-                print(f"Файл {filename} не найден")
+                logging.warning(f"Файл {filename} не найден")
                 return None
             except json.JSONDecodeError:
-                print(f"Ошибка декодирования JSON в файле {filename}")
+                logging.error(f"Ошибка декодирования JSON в файле {filename}")
                 return None
 
     def writeJson(self, filename, data):
         try:
             with open(filename, "w") as json_file:
                 json.dump(data, json_file, indent=4)
-            print(f"Файл {filename} создан или изменен")
+            logging.info(f"Файл {filename} создан или изменен")
         except Exception as e:
-            print(f"Ошибка при обработке файла {filename}: {e}, информация которая записывалась в файл {data}")
+            logging.error(f"Ошибка при обработке файла {filename}: {e}, информация которая записывалась в файл {data}")
 
     def set_password(self, nickname, password):
         keyring.set_password("WacoLauncher", nickname, password)
@@ -239,7 +254,7 @@ class Api:
                 data = [item for item in data if item['nickname'] != nickname]
                 self.writeJson("data/credentials.json", data)
 
-            print(f"Login failed: {response.json()['detail']}")
+            logging.error(f"Login failed: {response.json()['detail']}")
             return {"status_code": 401}
 
         return {"status_code": response.status_code}
@@ -263,7 +278,7 @@ class Api:
         elif response.status_code == 409:
             return {"status_code": 409}
         else:
-            print(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
+            logging.error(f"Registration failed: {response.json().get('detail', 'Unknown error')}")
             return {"status_code": 401}
 
     def update_skin(self, nickname, password, skin_bytes):
@@ -281,7 +296,7 @@ class Api:
         if response.status_code == 200:
             return True
         else:
-            print(f"Update skin failed: {response.json().get('detail', 'Unknown error')}")
+            logging.error(f"Update skin failed: {response.json().get('detail', 'Unknown error')}")
             return False
 
     def open_link(self, url):
@@ -337,7 +352,7 @@ class Api:
             return 200
 
         elif response.status_code == 401:
-            print(f"Login failed: {response.json()['detail']}")
+            logging.error(f"Login failed: {response.json()['detail']}")
             return 401
         else:
             return 502
@@ -356,7 +371,7 @@ class Api:
             return 200
 
         elif response.status_code == 401:
-            print(f"Login failed: {response.json()['detail']}")
+            logging.error(f"Login failed: {response.json()['detail']}")
             return 401
         else:
             return 502
@@ -476,17 +491,17 @@ class Api:
                 mod_path = os.path.join(mods_dir, mod)
                 if os.path.exists(mod_path):
                     os.remove(mod_path)
-                    print(f"Удален мод: {mod}")
+                    logging.info(f"Удален мод: {mod}")
 
             for mod in mods_to_install:
                 mod_path = os.path.join(mods_dir, mod)
                 if not os.path.exists(mod_path):
-                    print(f"Скачивание мода: {mod}")
+                    logging.info(f"Скачивание мода: {mod}")
                     file_download(f"https://github.com/Homanti/wacominecraft/raw/main/mods/{mod}", mods_dir, f"модов: {mod}")
 
             for mod in latest_list_mods:
                 if mod not in os.listdir(mods_dir):
-                    print(f"Скачивание мода: {mod}")
+                    logging.info(f"Скачивание мода: {mod}")
                     file_download(f"https://github.com/Homanti/wacominecraft/raw/main/mods/{mod}", mods_dir, f"модов: {mod}")
 
             remove_file(authlib_dir + "/authlib-injector-1.2.5.jar")
@@ -648,7 +663,12 @@ class Api:
                     self.disable_button("btn_play", True)
                     self.change_innerHTML("btn_play", "Запущено")
                     try:
-                        subprocess.run(minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.12", minecraft_dir, options=options), creationflags=subprocess.CREATE_NO_WINDOW)
+                        start_minecraft_command = minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.12", minecraft_dir, options=options)
+                        logging.info(f"Запуск Minecraft: {start_minecraft_command}")
+
+                        with open("minecraft_logs.txt", "w") as file:
+                            subprocess.run(start_minecraft_command, stdout=file, stderr=subprocess.STDOUT, creationflags=subprocess.CREATE_NO_WINDOW)
+
                     except Exception as e:
                         self.show_info_message("Ошибка", f"Ошибка запуска Minecraft: {e}")
 

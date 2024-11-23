@@ -8,3 +8,5 @@ web
 wacolauncher
 test.py
 authlib-injector.log
+launcher_logs.txt
+minecraft_logs.txt
