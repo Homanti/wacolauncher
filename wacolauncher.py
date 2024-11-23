@@ -310,14 +310,14 @@ class Api:
                         if password:
                             result = self.account_login(nickname, password)
                             if result["status_code"] == 200:
+                                if result["discord_id"] is None:
+                                    tab = "link_discord_register"
+                                    return tab
+                                else:
+                                    tab = "login"
+                                    return tab
                                 tab = "index"
                                 return "index"
-                            elif result["discord_id"] is None:
-                                tab = "link_discord_register"
-                                return tab
-                            else:
-                                tab = "login"
-                                return tab
             else:
                 tab = "login"
                 return tab
@@ -736,4 +736,4 @@ if __name__ == '__main__':
 
     threading.Thread(target=api.set_server_online, daemon=True).start()
     window = webview.create_window(title="WacoLauncher", url=f"https://wacolauncher-web-production.up.railway.app/{api.check_login()}", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(debug=False)
+    webview.start(debug=True)
