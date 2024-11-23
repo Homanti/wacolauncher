@@ -310,14 +310,15 @@ class Api:
                         if password:
                             result = self.account_login(nickname, password)
                             if result["status_code"] == 200:
-                                if result["discord_id"] is None:
+                                if result["result"][3] is None:
                                     tab = "link_discord_register"
                                     return tab
                                 else:
-                                    tab = "login"
-                                    return tab
-                                tab = "index"
-                                return "index"
+                                    tab = "index"
+                                    return "index"
+                            else:
+                                tab = "login"
+                                return tab
             else:
                 tab = "login"
                 return tab
