@@ -736,4 +736,4 @@ if __name__ == '__main__':
 
     threading.Thread(target=api.set_server_online, daemon=True).start()
     window = webview.create_window(title="WacoLauncher", url=f"https://wacolauncher-web-production.up.railway.app/{api.check_login()}", width=1296, height=809, js_api=api, resizable=False, fullscreen=False)
-    webview.start(debug=True)
+    webview.start(debug=False)
