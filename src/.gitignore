@@ -1,0 +1,11 @@
+src/data/
+src/config/
+src/logs/
+src/pfm/
+src/gitignore
+src/modernlife
+src/authlib-injector.log
+src/launcher_logs.txt
+src/minecraft_logs.txt
+.idea
+build
