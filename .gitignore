@@ -2,7 +2,7 @@ src/data/
 src/config/
 src/logs/
 src/pfm/
-src/gitignore
+gitignore
 src/modernlife
 src/authlib-injector.log
 src/launcher_logs.txt
