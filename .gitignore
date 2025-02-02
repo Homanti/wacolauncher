@@ -9,3 +9,5 @@ src/launcher_logs.txt
 src/minecraft_logs.txt
 .idea
 build
+src/wacolauncher
+src/update_logs.txt

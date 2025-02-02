@@ -35,8 +35,9 @@ if choice == 1:
         version="3.0.0",
         description="Лаунчер для WacoRP",
         options={"build_exe": build_exe_options},
-        executables=[Executable("src/wacolauncher.py", base=base, icon="icon.ico")],
+        executables=[Executable("src/wacolauncher.py", base=base, icon="gitignore/setup/icon.ico")],
     )
+
     zip_directory_contents("build/wacolauncher", "build_launcher/wacolauncher.zip")
     shutil.rmtree("build/wacolauncher")
 
@@ -54,7 +55,8 @@ else:
         version="3.0.0",
         description="Лаунчер для WacoRP",
         options={"build_exe": build_exe_options},
-        executables=[Executable("src/update.py", base=base, icon="icon.ico")],
+        executables=[Executable("src/update.py", base=base, icon="gitignore/setup/icon.ico")],
     )
+
     zip_directory_contents("build/update", "build_launcher/update.zip")
     shutil.rmtree("build/update")

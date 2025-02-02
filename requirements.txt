@@ -1,0 +1,8 @@
+psutil
+pywebview
+requests
+minecraft-launcher-lib
+keyring
+keyrings.alt
+cx_Freeze
+mcstatus
