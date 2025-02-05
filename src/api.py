@@ -8,7 +8,7 @@ import minecraft_launcher_lib
 import io
 import psutil
 from mcstatus import JavaServer
-from src.config import SERVER_IP, MINECRAFT_DIR, AUTHLIB_DIR, MINECRAFT_VERSION_FILE, AUTHAPI_URL
+from src.config import SERVER_IP, MINECRAFT_DIR, AUTHLIB_DIR, MINECRAFT_VERSION_FILE, AUTHAPI_URL, MINECRAFT_VERSION, FORGE_VERSION
 from src.utils import *
 
 class Api:
@@ -324,15 +324,27 @@ class Api:
         self.open_progress_bar(True)
         self.progress_bar_set(percent, "Minecraft: " + status)
 
+    def disable_launch_button(self):
+        self.downloading = True
+        self.open_progress_bar(True)
+        self.disable_button("btn_play", True)
+        self.disable_button("profile_button", True)
+        self.disable_button("btn_settings", True)
+        self.change_innerHTML("btn_play", 'Установка...')
+
+    def enable_launch_button(self):
+        self.downloading = False
+        self.open_progress_bar(False)
+        self.disable_button("btn_play", False)
+        self.disable_button("profile_button", False)
+        self.disable_button("btn_settings", False)
+        self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
+
     def install_minecraft(self):
         try:
             max_value = [0]
             status = [0]
-            self.downloading = True
-            self.disable_button("btn_play", True)
-            self.disable_button("profile_button", True)
-            self.disable_button("btn_settings", True)
-            self.change_innerHTML("btn_play", 'Установка...')
+            self.disable_launch_button()
 
             callback = {
                 "setStatus": lambda value: status.__setitem__(0, value),
@@ -340,7 +352,7 @@ class Api:
                 "setMax": lambda value: max_value.__setitem__(0, value)
             }
 
-            minecraft_launcher_lib.forge.install_forge_version("1.20.1-47.3.12", MINECRAFT_DIR, callback=callback)
+            minecraft_launcher_lib.forge.install_forge_version(f"{MINECRAFT_VERSION}-{FORGE_VERSION}", MINECRAFT_DIR, callback=callback)
 
             self.write_json(MINECRAFT_VERSION_FILE, {"mods": [], "rp_version": None, "pointblank": None})
 
@@ -355,12 +367,7 @@ class Api:
         except Exception as e:
             self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
         finally:
-            self.downloading = False
-            self.open_progress_bar(False)
-            self.disable_button("btn_play", False)
-            self.disable_button("profile_button", False)
-            self.disable_button("btn_settings", False)
-            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
+            self.enable_launch_button()
 
     def install_mods(self):
         try:
@@ -370,12 +377,7 @@ class Api:
             list_mods = minecraft_version["mods"]
             latest_list_mods = latest_minecraft_version["mods"]
 
-            self.downloading = True
-            self.open_progress_bar(True)
-            self.disable_button("btn_play", True)
-            self.disable_button("profile_button", True)
-            self.disable_button("btn_settings", True)
-            self.change_innerHTML("btn_play", 'Установка...')
+            self.disable_launch_button()
 
             mods_dir = os.path.join(MINECRAFT_DIR, "mods")
 
@@ -410,32 +412,17 @@ class Api:
         except Exception as e:
             self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
         finally:
-            self.downloading = False
-            self.open_progress_bar(False)
-            self.disable_button("btn_play", False)
-            self.disable_button("profile_button", False)
-            self.disable_button("btn_settings", False)
-            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
+            self.enable_launch_button()
 
     def install_authlib_injector(self):
         try:
-            self.downloading = True
-            self.open_progress_bar(True)
-            self.disable_button("btn_play", True)
-            self.disable_button("profile_button", True)
-            self.disable_button("btn_settings", True)
-            self.change_innerHTML("btn_play", 'Установка...')
+            self.disable_launch_button()
 
             self.file_download(f"https://github.com/yushijinhun/authlib-injector/releases/download/v1.2.5/authlib-injector-1.2.5.jar", AUTHLIB_DIR, f"модов: authlib-injector-1.2.5.jar")
         except Exception as e:
             self.show_info_message("Ошибка", f"Ошибка при установке authlib-injector: {e}")
         finally:
-            self.downloading = False
-            self.open_progress_bar(False)
-            self.disable_button("btn_play", False)
-            self.disable_button("profile_button", False)
-            self.disable_button("btn_settings", False)
-            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
+            self.enable_launch_button()
 
     def install_rp(self):
         try:
@@ -443,12 +430,7 @@ class Api:
             latest_minecraft_version = self.read_json("https://pastebin.com/raw/70N3V9Nj")
             latest_rp_version = latest_minecraft_version["rp_version"]
 
-            self.downloading = True
-            self.open_progress_bar(True)
-            self.disable_button("btn_play", True)
-            self.disable_button("profile_button", True)
-            self.disable_button("btn_settings", True)
-            self.change_innerHTML("btn_play", 'Установка...')
+            self.disable_launch_button()
 
             remove_file(MINECRAFT_DIR + "/resourcepacks/WacoRP.zip")
             self.file_download(url="https://github.com/Homanti/wacominecraft/raw/main/WacoRP.zip", folder_path=MINECRAFT_DIR + "/resourcepacks", download_name="ресурс пака")
@@ -458,12 +440,7 @@ class Api:
         except Exception as e:
             self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
         finally:
-            self.downloading = False
-            self.open_progress_bar(False)
-            self.disable_button("btn_play", False)
-            self.disable_button("profile_button", False)
-            self.disable_button("btn_settings", False)
-            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
+            self.enable_launch_button()
 
     def install_pointblank(self):
         try:
@@ -471,12 +448,7 @@ class Api:
             latest_minecraft_version = self.read_json("https://pastebin.com/raw/70N3V9Nj")
             latest_pointblank_version = latest_minecraft_version["pointblank"]
 
-            self.downloading = True
-            self.open_progress_bar(True)
-            self.disable_button("btn_play", True)
-            self.disable_button("profile_button", True)
-            self.disable_button("btn_settings", True)
-            self.change_innerHTML("btn_play", 'Установка...')
+            self.disable_launch_button()
 
             remove_directory(MINECRAFT_DIR + "/pointblank")
             self.file_download(url="https://github.com/Homanti/wacominecraft/raw/main/pointblank.zip", folder_path=MINECRAFT_DIR + "/pointblank", download_name="ресурс пака")
@@ -491,15 +463,10 @@ class Api:
         except Exception as e:
             self.show_info_message("Ошибка", f"Произошла непредвиденная ошибка {e}. Попробуйте еще раз.")
         finally:
-            self.downloading = False
-            self.open_progress_bar(False)
-            self.disable_button("btn_play", False)
-            self.disable_button("profile_button", False)
-            self.disable_button("btn_settings", False)
-            self.change_innerHTML("btn_play", '<span class="material-icons icon-settings">play_arrow</span>Играть')
+            self.enable_launch_button()
 
     def check_minecraft_installation(self):
-        return os.path.exists(MINECRAFT_DIR + "/versions/1.20.1-forge-47.3.12/1.20.1-forge-47.3.12.jar")
+        return os.path.exists(MINECRAFT_DIR + f"/versions/{MINECRAFT_VERSION}-forge-{FORGE_VERSION}/{MINECRAFT_VERSION}-forge-{FORGE_VERSION}.jar")
 
     def check_authlib_injector_installation(self):
         return os.path.exists(AUTHLIB_DIR + "/authlib-injector-1.2.5.jar")
@@ -554,7 +521,7 @@ class Api:
                     self.disable_button("btn_play", True)
                     self.change_innerHTML("btn_play", "Запуск...")
                     try:
-                        start_minecraft_command = minecraft_launcher_lib.command.get_minecraft_command("1.20.1-forge-47.3.12", MINECRAFT_DIR, options=options)
+                        start_minecraft_command = minecraft_launcher_lib.command.get_minecraft_command(f"{MINECRAFT_VERSION}-forge-{FORGE_VERSION}", MINECRAFT_DIR, options=options)
                         logging.info(f"Запуск Minecraft: {start_minecraft_command}")
 
                         with open("minecraft_logs.txt", "w") as file:
