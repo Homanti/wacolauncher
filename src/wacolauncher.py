@@ -28,6 +28,8 @@ def main():
 
     api.set_window(window)
 
+    api.update_updater()
+
     settings = read_json("data/settings.json")
     minecraft_version = read_json(MINECRAFT_VERSION_FILE)
 
@@ -39,7 +41,7 @@ def main():
         write_json(MINECRAFT_VERSION_FILE, {"mods": [], "rp_version": None, "pointblank": None})
 
     threading.Thread(target=api.set_server_online, daemon=True).start()
-    webview.start(api.update_updater, debug=False)
+    webview.start(debug=False)
 
 if __name__ == '__main__':
     main()
