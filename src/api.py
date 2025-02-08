@@ -617,13 +617,14 @@ class Api:
             remove_file("wacolauncher/wacolauncher.zip")
             launcher_version_hash["launcher_version_hash"] = latest_launcher_version_hash
 
-        self._window.hide()
-        self.write_json("data/launcher_version_hash.json", launcher_version_hash)
+            self._window.hide()
+            self.write_json("data/launcher_version_hash.json", launcher_version_hash)
 
-        exe_path = os.path.abspath("wacolauncher/wacolauncher.exe")
+        if launcher_version_hash["launcher_version_hash"]:
+            exe_path = os.path.abspath("wacolauncher/wacolauncher.exe")
 
-        subprocess.Popen([exe_path], shell=True)
-        self._window.destroy()
+            subprocess.Popen([exe_path], shell=True)
+            self._window.destroy()
 
     def update_updater(self):
         updater_version_hash = self.read_json("./data/updater_version_hash.json")
@@ -651,7 +652,8 @@ class Api:
             self._window.hide()
             self.write_json("./data/updater_version_hash.json", updater_version_hash)
 
-            exe_path = os.path.abspath("./update.exe")
+            if updater_version_hash["updater_version_hash"]:
+                exe_path = os.path.abspath("./update.exe")
 
-            subprocess.Popen([exe_path], shell=True)
-            self._window.destroy()
+                subprocess.Popen([exe_path], shell=True)
+                self._window.destroy()
