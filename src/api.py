@@ -648,10 +648,10 @@ class Api:
             remove_file("./update.zip")
             updater_version_hash["updater_version_hash"] = latest_updater_version_hash
 
-        self._window.hide()
-        self.write_json("./data/updater_version_hash.json", updater_version_hash)
+            self._window.hide()
+            self.write_json("./data/updater_version_hash.json", updater_version_hash)
 
-        exe_path = os.path.abspath("./update.exe")
+            exe_path = os.path.abspath("./update.exe")
 
-        subprocess.Popen([exe_path], shell=True)
-        self._window.destroy()
+            subprocess.Popen([exe_path], shell=True)
+            self._window.destroy()
