@@ -54,3 +54,17 @@ def write_json(filename, data):
         logging.info(f"Файл {filename} создан или изменен")
     except Exception as e:
         logging.error(f"Ошибка при обработке файла {filename}: {e}, информация которая записывалась в файл {data}")
+
+def get_latest_commit_sha(repo, file_path):
+    response = requests.get(f"https://api.github.com/repos/{repo}/commits?path={file_path}&per_page=1")
+
+    if response.status_code == 200:
+        commits = response.json()
+        if commits:
+            sha = commits[0]['sha']
+            logging.info(f"SHA последнего коммита файла {repo, file_path}: {sha}")
+            return sha
+        else:
+            logging.warning(f"Файл {repo, file_path} не найден в истории коммитов.")
+    else:
+        logging.error(f"Ошибка запроса {repo, file_path}:", response.status_code, response.text)

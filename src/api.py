@@ -598,14 +598,14 @@ class Api:
             time.sleep(5)
 
     def update_launcher(self):
-        launcher_version = self.read_json("data/launcher_version.json")
-        latest_launcher_version = self.read_json("https://pastebin.com/raw/cGGax626")
+        launcher_version_hash = self.read_json("data/launcher_version_hash.json")
+        latest_launcher_version_hash = get_latest_commit_sha("Homanti/wacolauncher", "build_launcher/wacolauncher.zip")
 
-        if launcher_version is None:
-            self.write_json("data/launcher_version.json", {"launcher_version": None})
-            launcher_version = self.read_json("data/launcher_version.json")
+        if launcher_version_hash is None:
+            self.write_json("data/launcher_version_hash.json", {"launcher_version_hash": None})
+            launcher_version_hash = self.read_json("data/launcher_version_hash.json")
 
-        if not os.path.exists("wacolauncher/wacolauncher.exe") or latest_launcher_version["launcher_version"] != launcher_version["launcher_version"]:
+        if not os.path.exists("wacolauncher/wacolauncher.exe") or latest_launcher_version_hash != launcher_version_hash["launcher_version_hash"]:
             self._window.show()
             remove_directory("wacolauncher")
 
@@ -615,10 +615,10 @@ class Api:
                 zip_ref.extractall("wacolauncher")
 
             remove_file("wacolauncher/wacolauncher.zip")
-            launcher_version["launcher_version"] = latest_launcher_version["launcher_version"]
+            launcher_version_hash["launcher_version_hash"] = latest_launcher_version_hash
 
         self._window.hide()
-        self.write_json("data/launcher_version.json", launcher_version)
+        self.write_json("data/launcher_version_hash.json", launcher_version_hash)
 
         exe_path = os.path.abspath("wacolauncher/wacolauncher.exe")
 
