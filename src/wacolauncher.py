@@ -9,7 +9,7 @@ from src.utils import create_folder_if_needed, read_json, write_json
 def main():
     setup_logging("launcher_logs.txt")
 
-    create_folder_if_needed("data")
+    create_folder_if_needed("./data")
     create_folder_if_needed(MINECRAFT_DIR)
     create_folder_if_needed(AUTHLIB_DIR)
 
@@ -22,7 +22,8 @@ def main():
         url=f"{HTML_URL}/{api.check_login()}",
         js_api=api,
         resizable=False,
-        fullscreen=False
+        fullscreen=False,
+        hidden=True
     )
 
     api.set_window(window)
@@ -38,7 +39,7 @@ def main():
         write_json(MINECRAFT_VERSION_FILE, {"mods": [], "rp_version": None, "pointblank": None})
 
     threading.Thread(target=api.set_server_online, daemon=True).start()
-    webview.start(debug=False)
+    webview.start(api.update_updater, debug=False)
 
 if __name__ == '__main__':
     main()

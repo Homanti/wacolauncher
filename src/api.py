@@ -106,7 +106,7 @@ class Api:
         }
         try:
             try:
-                with open("data/credentials.json", "r") as json_file:
+                with open("./data/credentials.json", "r") as json_file:
                     data = json.load(json_file)
             except (FileNotFoundError, json.JSONDecodeError):
                 data = []
@@ -127,7 +127,7 @@ class Api:
                         account["active"] = False
                     data.append(new_account_data)
 
-            self.write_json("data/credentials.json", data)
+            self.write_json("./data/credentials.json", data)
         except Exception as e:
             logging.error(f"Ошибка при обработке файла data/credentials.json: {e}")
 
@@ -142,11 +142,11 @@ class Api:
             return {"status_code": 200, "result": response.json()["result"]}
 
         elif response.status_code == 401:
-            data = self.read_json("data/credentials.json")
+            data = self.read_json("./data/credentials.json")
 
             if data:
                 data = [item for item in data if item['nickname'] != nickname]
-                self.write_json("data/credentials.json", data)
+                self.write_json("./data/credentials.json", data)
 
             logging.error(f"Login failed: {response.json()['detail']}")
             return {"status_code": 401}
@@ -197,7 +197,7 @@ class Api:
         webbrowser.open(url)
 
     def get_active_account(self):
-        data = read_json("data/credentials.json")
+        data = read_json("./data/credentials.json")
         if data:
             for item in data:
                 if item['active']:
@@ -208,7 +208,7 @@ class Api:
         return None
 
     def check_login(self):
-        data = read_json("data/credentials.json")
+        data = read_json("./data/credentials.json")
         try:
             if data:
                 for item in data:
@@ -257,10 +257,10 @@ class Api:
         )
 
         if response.status_code == 200:
-            data = self.read_json("data/credentials.json")
+            data = self.read_json("./data/credentials.json")
             if data:
                 data = [item for item in data if not (item['nickname'] == nickname and item['password'] == password)]
-                self.write_json("data/credentials.json", data)
+                self.write_json("./data/credentials.json", data)
             return 200
 
         elif response.status_code == 401:
@@ -501,7 +501,7 @@ class Api:
 
     def start_minecraft(self):
         if self.check_minecraft_installation() and self.check_mods_installation() and self.check_rp_installation() and self.check_pointblank_installation() and self.check_authlib_injector_installation():
-            settings = self.read_json("data/settings.json")
+            settings = self.read_json("./data/settings.json")
             account = self.get_active_account()
 
             if account["status_code"] == 200:
@@ -621,6 +621,37 @@ class Api:
         self.write_json("data/launcher_version_hash.json", launcher_version_hash)
 
         exe_path = os.path.abspath("wacolauncher/wacolauncher.exe")
+
+        subprocess.Popen([exe_path], shell=True)
+        self._window.destroy()
+
+    def update_updater(self):
+        updater_version_hash = self.read_json("./data/updater_version_hash.json")
+        latest_updater_version_hash = get_latest_commit_sha("Homanti/wacolauncher", "build_launcher/update.zip")
+
+        if updater_version_hash is None:
+            self.write_json("./data/updater_version_hash.json", {"updater_version_hash": None})
+            updater_version_hash = self.read_json("./data/updater_version_hash.json")
+
+        if not os.path.exists("./update.exe") or latest_updater_version_hash != updater_version_hash["updater_version_hash"]:
+            self.load_tab("update")
+            self._window.show()
+            remove_directory("./lib")
+            remove_file("./python312.dll")
+            remove_file("./update.exe")
+
+            self.file_download(f"https://github.com/Homanti/wacolauncher/raw/main/build_launcher/update.zip", "./", "завершение установки")
+
+            with zipfile.ZipFile("./update.zip") as zip_ref:
+                zip_ref.extractall("./")
+
+            remove_file("./update.zip")
+            updater_version_hash["updater_version_hash"] = latest_updater_version_hash
+
+        self._window.hide()
+        self.write_json("./data/updater_version_hash.json", updater_version_hash)
+
+        exe_path = os.path.abspath("./update.exe")
 
         subprocess.Popen([exe_path], shell=True)
         self._window.destroy()

@@ -12,3 +12,7 @@ build
 src/wacolauncher
 src/update_logs.txt
 src/test.py
+src/update.exe
+src/python312.dll
+src/lib
+src/frozen_application_license.txt
