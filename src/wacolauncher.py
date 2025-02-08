@@ -23,12 +23,11 @@ def main():
         js_api=api,
         resizable=False,
         fullscreen=False,
-        hidden=True
     )
 
     api.set_window(window)
 
-    # api.update_updater()
+    api.update_updater()
 
     settings = read_json("data/settings.json")
     minecraft_version = read_json(MINECRAFT_VERSION_FILE)
